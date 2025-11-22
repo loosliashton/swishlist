@@ -10,6 +10,7 @@ import {
   doc,
   updateDoc,
   deleteDoc,
+  setDoc,
 } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { User } from '../models/user';
@@ -196,6 +197,35 @@ export class FirebaseService {
     });
   }
 
+  async checkShortUrl(shortUrl: string): Promise<string | null> {
+    const shortUrlsCol = collection(db, 'shortUrls');
+    const q = query(shortUrlsCol, where('__name__', '==', shortUrl));
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+      const doc = querySnapshot.docs[0];
+      const longUrl = doc.data()['listId'];
+      return longUrl;
+    }
+    return null;
+  }
+
+  async createAndAddShortUrl(list: List): Promise<string> {
+    if (list.shortUrl) return list.shortUrl;
+
+    const listId = list.id!;
+    const shortUrlsCol = collection(db, 'shortUrls');
+    let shortUrl = '';
+    while (true) {
+      shortUrl = Math.random().toString(36).substring(2, 5);
+      const q = query(shortUrlsCol, where('__name__', '==', shortUrl));
+      const querySnapshot = await getDocs(q);
+      if (querySnapshot.empty) break; // Unique short URL found
+    }
+    await setDoc(doc(db, 'shortUrls', shortUrl), { listId: listId });
+    await this.updateListShortUrl({ id: listId } as List, shortUrl);
+    return shortUrl;
+  }
+
   // Firebase Functions
   async getSuggestions(list: List) {
     const getSuggestions = httpsCallable(functions, 'getSuggestions');
@@ -245,26 +275,5 @@ export class FirebaseService {
   isAmazonUrl(url: string): boolean {
     if (!url) return false;
     return ['amazon', 'amzn.to', 'a.co'].some((domain) => url.includes(domain));
-  }
-
-  async getShareUrl(list: List): Promise<string> {
-    if (list.shortUrl) return list.shortUrl;
-
-    const shortUrl = '';
-    const longUrl = window.location.href;
-
-    return fetch(
-      `https://us-central1-aloosli-88777.cloudfunctions.net/newShortUrl?&shortUrl=${shortUrl}&longUrl=${longUrl}`,
-      {
-        method: 'POST',
-      },
-    ).then(async (res) => {
-      if (res.ok) {
-        const data = await res.json();
-        const shortUrl = data.shortUrl;
-        await this.updateListShortUrl(list, shortUrl);
-        return shortUrl;
-      }
-    });
   }
 }

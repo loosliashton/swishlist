@@ -1,5 +1,4 @@
 import { ChangeDetectorRef, Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { FirebaseService } from '../../services/firebase.service';
 import { List } from '../../models/list';
