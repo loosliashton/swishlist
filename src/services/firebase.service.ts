@@ -124,6 +124,18 @@ export class FirebaseService {
       });
     }
 
+    // Delete references to this list's short URL
+    if (list.shortUrl) {
+      const shortUrlsCol = collection(db, 'shortUrls');
+      const q = query(shortUrlsCol, where('__name__', '==', list.shortUrl));
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        const doc = querySnapshot.docs[0];
+        const shortUrlDocRef = doc.ref;
+        await deleteDoc(shortUrlDocRef);
+      }
+    }
+
     // Delete the list
     const listDocRef = doc(db, 'lists', list.id!);
     await deleteDoc(listDocRef);
