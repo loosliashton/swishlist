@@ -1,6 +1,6 @@
 {
-  "name": "Lists",
-  "short_name": "Lists",
+  "name": "Swishlist",
+  "short_name": "Swishlist",
   "display": "standalone",
   "scope": "/",
   "start_url": "/",
