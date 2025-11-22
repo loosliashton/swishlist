@@ -1,15 +1,64 @@
-# ChristmasList
+# Swishlist
 
-An Angular application designed to create and manage gift lists to share with friends & family. Hosted at http://lists.ashtonloosli.com.
+A modern and intuitive application to create, share, and manage your wishlists for any occasion.
 
-## Create a list
+[Try it out!](https://swishlist.cc/)
 
-Just enter your email to view your lists or create a new one. Items can be added to a list with a title, URL, and description.
+## 🌟 About The Project
 
-## Share your items
+Swishlist was built to solve the problem of gift-giving. It allows users to create personalized wishlists and share them with friends and family. Whether it's for a birthday, wedding, or holiday, Swishlist makes it easy to see what people truly want.
 
-Simply copy the URL of your list and send it to your friends and family. They can view your list and mark items as purchased.
+Here's why Swishlist is great:
+*   **Simplicity:** An easy-to-use interface for adding items, either from online stores or custom entries.
+*   **Shareability:** Share your lists with a simple link. No sign-up is required for viewers.
+*   **Collaboration:** Friends and family can mark items as "purchased" to avoid duplicate gifts, and this is hidden from the list owner!
 
-## Get suggestions
+## ✨ Features
 
-Use the AI-powered "Suggestions" button when you can't think of what to add to your list. It will generate a list of suggestions based on your previous items.
+- **Create Multiple Wishlists:** Organize your wishes for different events, or just keep track of items you're interested in.
+- **Rich Item Details:** Add notes, quantities, and priorities for each item.
+- **Shareable Links:** Links are easy to share and can be accessed without an account.
+- **Gift Reservation:** Avoid duplicate presents without spoiling the surprise.
+- **Responsive Design:** Fully functional on desktop and mobile.
+- **AI Suggestions:** Get item suggestions based on your interests and past wishlists.
+- **PWA Support:** Use Swishlist as a Progressive Web App for convenient access and share target visibility.
+
+## 🛠️ Built With
+
+*   **Frontend:**
+    *   [Angular](https://angular.dev/)
+*   **Backend:**
+    *   [Firebase](https://firebase.google.com/)
+
+## 🚀 Getting Started
+
+To get a local copy up and running, follow these simple steps.
+
+### Prerequisites
+
+You need to have Node.js and npm installed on your machine.
+*   npm
+    ```sh
+    npm install npm@latest -g
+    ```
+
+### Installation
+
+1.  Clone the repo
+    ```sh
+    git clone https://github.com/loosliashton/swishlist.git
+    ```
+2.  Install NPM packages
+    ```sh
+    cd swishlist
+    npm i
+    ```
+
+### Running the Application
+
+1.  Start the application from the root directory:
+    ```sh
+    ng serve
+    ```
+
+The application will be available at `http://localhost:4200`.
