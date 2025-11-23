@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { app } from 'src/environments/environment';
 import {
   collection,
+  getDoc,
   getDocs,
   getFirestore,
   addDoc,
@@ -61,13 +62,11 @@ export class FirebaseService {
   }
 
   async getUserById(id: string): Promise<User | null> {
-    const usersCol = collection(db, 'users');
-    const q = query(usersCol, where('__name__', '==', id));
-    const querySnapshot = await getDocs(q);
-    if (!querySnapshot.empty) {
-      const doc = querySnapshot.docs[0];
-      const user = doc.data() as User;
-      user.id = doc.id;
+    const userDocRef = doc(db, 'users', id);
+    const userDoc = await getDoc(userDocRef);
+    if (userDoc.exists()) {
+      const user = userDoc.data() as User;
+      user.id = userDoc.id;
       return user;
     }
 
@@ -132,14 +131,8 @@ export class FirebaseService {
 
     // Delete references to this list's short URL
     if (list.shortUrl) {
-      const shortUrlsCol = collection(db, 'shortUrls');
-      const q = query(shortUrlsCol, where('__name__', '==', list.shortUrl));
-      const querySnapshot = await getDocs(q);
-      if (!querySnapshot.empty) {
-        const doc = querySnapshot.docs[0];
-        const shortUrlDocRef = doc.ref;
-        await deleteDoc(shortUrlDocRef);
-      }
+      const shortUrlDocRef = doc(db, 'shortUrls', list.shortUrl);
+      await deleteDoc(shortUrlDocRef);
     }
 
     // Delete the list
@@ -160,19 +153,19 @@ export class FirebaseService {
   }
 
   async getListsFromIds(listIds: string[]): Promise<List[]> {
-    let lists: List[] = [];
-    for (let listId of listIds) {
-      const listCol = collection(db, `lists`);
-      const q = query(listCol, where('__name__', '==', listId));
-      const querySnapshot = await getDocs(q);
-      if (!querySnapshot.empty) {
-        const doc = querySnapshot.docs[0];
-        const list = doc.data() as List;
-        list.id = doc.id;
-        lists.push(list);
+    const listPromises = listIds.map(async (listId) => {
+      const listDocRef = doc(db, 'lists', listId);
+      const listDoc = await getDoc(listDocRef);
+      if (listDoc.exists()) {
+        const list = listDoc.data() as List;
+        list.id = listDoc.id;
+        return list;
       }
-    }
-    return lists;
+      return null;
+    });
+
+    const lists = await Promise.all(listPromises);
+    return lists.filter((list): list is List => list !== null);
   }
 
   async addToSavedLists(user: User, list: List) {
@@ -195,13 +188,11 @@ export class FirebaseService {
   }
 
   async getList(listId: string): Promise<List | null> {
-    const listCol = collection(db, `lists`);
-    const q = query(listCol, where('__name__', '==', listId));
-    const querySnapshot = await getDocs(q);
-    if (!querySnapshot.empty) {
-      const doc = querySnapshot.docs[0];
-      const list = doc.data() as List;
-      list.id = doc.id;
+    const listDocRef = doc(db, 'lists', listId);
+    const listDoc = await getDoc(listDocRef);
+    if (listDoc.exists()) {
+      const list = listDoc.data() as List;
+      list.id = listDoc.id;
       return list;
     }
 
@@ -216,12 +207,10 @@ export class FirebaseService {
   }
 
   async checkShortUrl(shortUrl: string): Promise<string | null> {
-    const shortUrlsCol = collection(db, 'shortUrls');
-    const q = query(shortUrlsCol, where('__name__', '==', shortUrl));
-    const querySnapshot = await getDocs(q);
-    if (!querySnapshot.empty) {
-      const doc = querySnapshot.docs[0];
-      const longUrl = doc.data()['listId'];
+    const shortUrlDocRef = doc(db, 'shortUrls', shortUrl);
+    const shortUrlDoc = await getDoc(shortUrlDocRef);
+    if (shortUrlDoc.exists()) {
+      const longUrl = shortUrlDoc.data()['listId'];
       return longUrl;
     }
     return null;
@@ -231,13 +220,12 @@ export class FirebaseService {
     if (list.shortUrl) return list.shortUrl;
 
     const listId = list.id!;
-    const shortUrlsCol = collection(db, 'shortUrls');
     let shortUrl = '';
     while (true) {
       shortUrl = Math.random().toString(36).substring(2, 5);
-      const q = query(shortUrlsCol, where('__name__', '==', shortUrl));
-      const querySnapshot = await getDocs(q);
-      if (querySnapshot.empty) break; // Unique short URL found
+      const shortUrlDocRef = doc(db, 'shortUrls', shortUrl);
+      const shortUrlDoc = await getDoc(shortUrlDocRef);
+      if (!shortUrlDoc.exists()) break; // Unique short URL found
     }
     await setDoc(doc(db, 'shortUrls', shortUrl), { listId: listId });
     await this.updateListShortUrl({ id: listId } as List, shortUrl);

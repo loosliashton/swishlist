@@ -53,10 +53,10 @@ export class HomeComponent implements OnInit {
     });
 
     this.recentLists = await this.firebase.getListsFromIds(sorted.slice(0, 5));
-    for (let list of this.recentLists) {
-      let creator = await this.firebase.getUserById(list.creatorID);
-      this.recentListCreators.push(creator);
-    }
+    const creatorPromises = this.recentLists.map((list) =>
+      this.firebase.getUserById(list.creatorID),
+    );
+    this.recentListCreators = await Promise.all(creatorPromises);
 
     this.loading = false;
   }
