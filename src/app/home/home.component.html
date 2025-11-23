@@ -66,9 +66,9 @@
           @for (list of recentLists; track list; let i = $index) {
             <app-recent-list
               [list]="list"
-              [creator]="recentListCreators[i]"
+              [creator]="recentListCreators[i]?.name || 'Unknown User'"
               [showDeleteButton]="true"
-              (listClicked)="navigateToList($event)"
+              (listClicked)="navigateToList($event, recentListCreators[i])"
               (deleteClicked)="removeList($event.list, $event.event)"
             ></app-recent-list>
           }

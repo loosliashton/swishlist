@@ -8,10 +8,10 @@ import { User } from '../../models/user';
 import { ChangeNameComponent } from './change-name/change-name.component';
 
 @Component({
-    selector: 'app-my-lists',
-    templateUrl: './my-lists.component.html',
-    styleUrls: ['./my-lists.component.css'],
-    standalone: false
+  selector: 'app-my-lists',
+  templateUrl: './my-lists.component.html',
+  styleUrls: ['./my-lists.component.css'],
+  standalone: false,
 })
 export class MyListsComponent implements OnInit {
   email: string = '';
@@ -26,7 +26,7 @@ export class MyListsComponent implements OnInit {
     private route: ActivatedRoute,
     private firebase: FirebaseService,
     public dialog: MatDialog,
-    private router: Router
+    private router: Router,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -54,7 +54,9 @@ export class MyListsComponent implements OnInit {
   }
 
   navigateToList(list: List) {
-    this.router.navigate(['/list', list.id]);
+    this.router.navigate(['/list', list.id], {
+      state: { list: list, user: this.user },
+    });
   }
 
   async unsaveList(list: List, event: Event) {

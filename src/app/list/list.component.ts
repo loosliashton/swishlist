@@ -41,43 +41,81 @@ export class ListComponent {
   ) {}
 
   async ngOnInit() {
+    const { passedList, passedUser } = this.initializeFromState();
+
     this.route.paramMap.subscribe(async (params) => {
-      let id = params.get('id') ?? '';
+      const id = params.get('id');
       if (!id) return;
 
-      await this.getList(id);
+      await this.loadList(id, passedList);
       if (!this.list) return;
 
-      // Get the creator of the list
-      await this.firebase.getUserById(this.list.creatorID).then((creator) => {
-        if (!creator) return;
-        this.creator = creator;
-        this.titleService.setTitle(`${this.creator?.name}'s List`);
-        // Force the page name to update
-        this.cdr.detectChanges();
-      });
+      await this.loadCreator(passedUser);
 
-      // Save this list to local recent lists
-      let recentLists = JSON.parse(localStorage.getItem('recentLists') || '{}');
+      // Update the page name
+      this.titleService.setTitle(`${this.creator?.name}'s List`);
 
-      recentLists[id] = new Date();
-      localStorage.setItem('recentLists', JSON.stringify(recentLists));
-
-      // Check if user has set a spoiler preference for this list
-      let spoilerChoices = localStorage.getItem('spoilerChoices');
-      let spoilerChoicesMap = spoilerChoices ? JSON.parse(spoilerChoices) : {};
-      if (spoilerChoicesMap[id] !== undefined) {
-        this.spoilers = spoilerChoicesMap[id];
-      } else {
-        // Check to see if the user wants spoilers
-        this.spoilers = await this.openSpoilerPrompt();
-      }
-
-      // Check if user has saved a spoiler setting for this list
-      this.userHasSavedSetting = this.checkIfUserHasSavedSpoilerSetting();
+      this.addToRecentLists(id);
+      await this.manageSpoilerSettings(id);
 
       this.loading = false;
     });
+  }
+
+  private initializeFromState(): { passedList: List; passedUser: User } {
+    const passedList: List = history.state.list;
+    const passedUser: User = history.state.user;
+    // Consume navigation state to force fetching data on reload
+    history.replaceState({}, '');
+    return { passedList, passedUser };
+  }
+
+  private async loadList(id: string, passedList?: List) {
+    // If a list was passed via navigation state and its ID matches the route, use it.
+    // Otherwise, fetch the list from Firebase.
+    if (passedList && passedList.id === id) {
+      this.list = passedList;
+    } else {
+      await this.getList(id);
+    }
+  }
+
+  private async loadCreator(passedUser?: User) {
+    // Get the creator of the list
+    // Cache-First: Use passed user if available and valid to avoid DB call
+    if (passedUser && passedUser.id === this.list!.creatorID) {
+      this.creator = passedUser;
+    } else {
+      // Only fetch if we don't have valid passed user data
+      await this.firebase.getUserById(this.list!.creatorID).then((creator) => {
+        if (!creator) return;
+        this.creator = creator;
+      });
+    }
+  }
+
+  private addToRecentLists(id: string) {
+    // Save this list to local recent lists
+    let recentLists = JSON.parse(localStorage.getItem('recentLists') || '{}');
+
+    recentLists[id] = new Date();
+    localStorage.setItem('recentLists', JSON.stringify(recentLists));
+  }
+
+  private async manageSpoilerSettings(id: string) {
+    // Check if user has set a spoiler preference for this list
+    let spoilerChoicesMap = JSON.parse(
+      localStorage.getItem('spoilerChoices') || '{}',
+    );
+    if (spoilerChoicesMap[id] !== undefined) {
+      this.spoilers = spoilerChoicesMap[id];
+    } else {
+      // Check to see if the user wants spoilers
+      this.spoilers = await this.openSpoilerPrompt();
+    }
+
+    // Check if user has saved a spoiler setting for this list
+    this.userHasSavedSetting = this.checkIfUserHasSavedSpoilerSetting();
   }
 
   async getList(id: string) {
