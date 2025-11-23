@@ -54,7 +54,9 @@ export class MyListsComponent implements OnInit {
   }
 
   navigateToList(list: List) {
-    this.router.navigate(['/list', list.id], { state: { list: list, user: this.user } });
+    this.router.navigate(['/list', list.id], {
+      state: { list: list, user: this.user },
+    });
   }
 
   async unsaveList(list: List, event: Event) {

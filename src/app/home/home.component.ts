@@ -1,20 +1,21 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { List } from 'src/models/list';
+import { User } from 'src/models/user';
 import { FirebaseService } from 'src/services/firebase.service';
 
 @Component({
-    selector: 'app-home',
-    templateUrl: './home.component.html',
-    styleUrls: ['./home.component.css'],
-    standalone: false
+  selector: 'app-home',
+  templateUrl: './home.component.html',
+  styleUrls: ['./home.component.css'],
+  standalone: false,
 })
 export class HomeComponent implements OnInit {
   badEmail: boolean = false;
   email: string = '';
   christmasTheme: boolean = false;
   recentLists: List[] = [];
-  recentListCreators: string[] = [];
+  recentListCreators: (User | null)[] = [];
   loading: boolean = false;
 
   constructor(
@@ -54,15 +55,16 @@ export class HomeComponent implements OnInit {
     this.recentLists = await this.firebase.getListsFromIds(sorted.slice(0, 5));
     for (let list of this.recentLists) {
       let creator = await this.firebase.getUserById(list.creatorID);
-      if (creator) this.recentListCreators.push(creator.name);
-      else this.recentListCreators.push('Unknown');
+      this.recentListCreators.push(creator);
     }
 
     this.loading = false;
   }
 
-  navigateToList(list: List) {
-    this.router.navigate(['/list', list.id]);
+  navigateToList(list: List, user: User | null) {
+    this.router.navigate(['/list', list.id], {
+      state: { list: list, user: user },
+    });
   }
 
   goToMyLists(email: string) {
