@@ -41,21 +41,39 @@ export class ListComponent {
   ) {}
 
   async ngOnInit() {
+    const passedList: List = history.state.list;
+    const passedUser: User = history.state.user;
+    // Consume navigation state to force fetching data on reload
+    history.replaceState({}, '');
+
     this.route.paramMap.subscribe(async (params) => {
       let id = params.get('id') ?? '';
       if (!id) return;
 
-      await this.getList(id);
+      // If a list was passed via navigation state and its ID matches the route, use it.
+      // Otherwise, fetch the list from Firebase.
+      if (passedList && passedList.id === id) {
+        this.list = passedList;
+      } else {
+        await this.getList(id);
+      }
+
       if (!this.list) return;
 
       // Get the creator of the list
-      await this.firebase.getUserById(this.list.creatorID).then((creator) => {
-        if (!creator) return;
-        this.creator = creator;
-        this.titleService.setTitle(`${this.creator?.name}'s List`);
-        // Force the page name to update
-        this.cdr.detectChanges();
-      });
+      // Cache-First: Use passed user if available and valid to avoid DB call
+      if (passedUser && passedUser.id === this.list.creatorID) {
+        this.creator = passedUser;
+      } else {
+        // Only fetch if we don't have valid passed user data
+        await this.firebase.getUserById(this.list.creatorID).then((creator) => {
+          if (!creator) return;
+          this.creator = creator;
+        });
+      }
+      // Force the page name to update
+      this.titleService.setTitle(`${this.creator?.name}'s List`);
+      this.cdr.detectChanges();
 
       // Save this list to local recent lists
       let recentLists = JSON.parse(localStorage.getItem('recentLists') || '{}');
