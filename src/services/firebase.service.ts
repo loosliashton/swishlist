@@ -50,7 +50,7 @@ export class FirebaseService {
 
   async getUserIdByEmail(email: string): Promise<string> {
     const usersCol = collection(db, 'users');
-    const q = query(usersCol, where('email', '==', email));
+    const q = query(usersCol, where('email', '==', email.toLowerCase().trim()));
     const querySnapshot = await getDocs(q);
     if (!querySnapshot.empty) {
       const doc = querySnapshot.docs[0];
