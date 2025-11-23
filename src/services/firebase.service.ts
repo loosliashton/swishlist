@@ -92,6 +92,12 @@ export class FirebaseService {
     await updateDoc(userDocRef, {
       lists: [...(user.lists ?? []), docId],
     });
+
+    // Add a short URL for the new list
+    const shortUrl = await this.createAndAddShortUrl({ ...newList, id: docId });
+    newList.id = docId;
+    newList.shortUrl = shortUrl;
+    this.updateListShortUrl(newList, shortUrl);
   }
 
   async saveList(list: List): Promise<boolean> {
