@@ -26,8 +26,8 @@ export class ShareComponent {
   }
 
   ngOnInit() {
-    this.firebase.getShareUrl(this.list).then((url) => {
-      this.shareUrl = `http://aloos.li/${url}`;
+    this.firebase.createAndAddShortUrl(this.list).then((url) => {
+      this.shareUrl = `http://swishlist.cc/${url}`;
       this.loading = false;
       // If share API is available, prompt share dialog
       if (navigator.share) {
