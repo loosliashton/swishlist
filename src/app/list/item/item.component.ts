@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Inject, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Inject, Output } from '@angular/core';
 
 import {
   MAT_DIALOG_DATA,
@@ -6,13 +6,14 @@ import {
   MatDialogRef,
 } from '@angular/material/dialog';
 import { Item } from 'src/models/item';
-import { CopyToListComponent } from './copy-to-list/copy-to-list.component';
+import { RecentListsModalComponent } from './recent-lists-modal/recent-lists-modal.component';
+import { RecentListsModalFunctionality } from './recent-lists-modal/recent-lists-modal-functionality.enum';
 
 @Component({
-    selector: 'app-item',
-    templateUrl: './item.component.html',
-    styleUrls: ['./item.component.css'],
-    standalone: false
+  selector: 'app-item',
+  templateUrl: './item.component.html',
+  styleUrls: ['./item.component.css'],
+  standalone: false,
 })
 export class ItemComponent {
   item: Item;
@@ -34,8 +35,11 @@ export class ItemComponent {
   }
 
   openCopyToListModal() {
-    const dialogRef = this.dialog.open(CopyToListComponent, {
-      data: { item: this.item, copyImmediately: true },
+    const dialogRef = this.dialog.open(RecentListsModalComponent, {
+      data: {
+        item: this.item,
+        functionality: RecentListsModalFunctionality.CopyItemToList,
+      },
       width: '600px',
     });
 

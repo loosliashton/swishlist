@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CopyToListComponent } from '../list/item/copy-to-list/copy-to-list.component';
+import { RecentListsModalComponent } from '../list/item/recent-lists-modal/recent-lists-modal.component';
 import { Item } from 'src/models/item';
+import { RecentListsModalFunctionality } from '../list/item/recent-lists-modal/recent-lists-modal-functionality.enum';
 
 @Component({
   selector: 'app-share-target',
@@ -60,8 +61,8 @@ export class ShareTargetComponent implements OnInit {
   }
 
   private openAddToListModal(item: Item) {
-    const dialogRef = this.dialog.open(CopyToListComponent, {
-      data: { item, copyImmediately: false },
+    const dialogRef = this.dialog.open(RecentListsModalComponent, {
+      data: { item, functionality:  RecentListsModalFunctionality.AddItemToList },
       width: '600px',
     });
 

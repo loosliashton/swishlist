@@ -85,7 +85,11 @@
               <mat-expansion-panel-header>
                 <mat-panel-title>Stuff I Like</mat-panel-title>
               </mat-expansion-panel-header>
-              <p>{{ list!.ideas || 'Press the "Edit" button to add some ideas!' }}</p>
+              <p>
+                {{
+                  list!.ideas || 'Press the "Edit" button to add some ideas!'
+                }}
+              </p>
             </mat-expansion-panel>
           </mat-accordion>
         } @else {
@@ -178,3 +182,15 @@
     </a>
   </footer>
 }
+
+<div class="floating-control">
+  <button class="control-btn" routerLink="/">
+    <i class="fa-solid fa-house fa-lg"></i>
+    <span>Home</span>
+  </button>
+  <div class="divider"></div>
+  <button class="control-btn" (click)="openHistoryModal()">
+    <i class="fa-solid fa-clock-rotate-left fa-lg"></i>
+    <span>Recent Lists</span>
+  </button>
+</div>
