@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FirebaseService } from '../../services/firebase.service';
 import { List } from '../../models/list';
@@ -14,6 +14,8 @@ import { SaveListComponent } from './save-list/save-list.component';
 import { ShareComponent } from './share/share.component';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subscription } from 'rxjs';
+import { RecentListsModalComponent } from './item/recent-lists-modal/recent-lists-modal.component';
+import { RecentListsModalFunctionality } from './item/recent-lists-modal/recent-lists-modal-functionality.enum';
 
 @Component({
   selector: 'app-list',
@@ -36,7 +38,6 @@ export class ListComponent {
     private firebase: FirebaseService,
     public dialog: MatDialog,
     private titleService: Title,
-    private cdr: ChangeDetectorRef,
     private snackbar: MatSnackBar,
   ) {}
 
@@ -44,6 +45,7 @@ export class ListComponent {
     const { passedList, passedUser } = this.initializeFromState();
 
     this.route.paramMap.subscribe(async (params) => {
+      this.loading = true;
       const id = params.get('id');
       if (!id) return;
 
@@ -282,5 +284,15 @@ export class ListComponent {
     localStorage.setItem('spoilerChoices', JSON.stringify(spoilerChoicesMap));
     // Refresh page to re-prompt for spoiler preference
     window.location.reload();
+  }
+
+  openHistoryModal() {
+    this.dialog.open(RecentListsModalComponent, {
+      data: {
+        functionality: RecentListsModalFunctionality.NavigateToList,
+        currentListId: this.list?.id || null,
+      },
+      width: '600px',
+    });
   }
 }

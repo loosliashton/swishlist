@@ -13,30 +13,50 @@ import { FirebaseService } from 'src/services/firebase.service';
 import { RecentListComponent } from 'src/app/list/recent-list/recent-list.component';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AddItemComponent } from '../../add-item/add-item.component';
+import { RecentListsModalFunctionality } from './recent-lists-modal-functionality.enum';
+import { User } from 'src/models/user';
 
 @Component({
-  selector: 'app-copy-to-list',
+  selector: 'app-recent-lists-modal',
   imports: [CommonModule, MatDialogModule, RecentListComponent],
-  templateUrl: './copy-to-list.component.html',
-  styleUrl: './copy-to-list.component.css',
+  templateUrl: './recent-lists-modal.component.html',
+  styleUrl: './recent-lists-modal.component.css',
 })
-export class CopyToListComponent implements OnInit {
+export class RecentListsModalComponent implements OnInit {
   recentLists: List[] = [];
-  recentListCreators: string[] = [];
+  recentListCreators: (User | null)[] = [];
   loading: boolean = false;
   copyLoading: boolean = false;
-  item: Item;
+  functionality: RecentListsModalFunctionality =
+    RecentListsModalFunctionality.NavigateToList;
+  item: Item | null = null;
+  title: string;
+  currentListId: string | null = null;
 
   constructor(
     private router: Router,
     private firebase: FirebaseService,
     private snackbar: MatSnackBar,
-    public dialogRef: MatDialogRef<CopyToListComponent>,
+    public dialogRef: MatDialogRef<RecentListsModalComponent>,
     public dialog: MatDialog,
     @Inject(MAT_DIALOG_DATA)
-    public data: { item: Item; copyImmediately: boolean },
+    public data: { item: Item; functionality: RecentListsModalFunctionality, currentListId?: string },
   ) {
     this.item = data.item;
+    this.currentListId = data.currentListId || null;
+    this.functionality = data.functionality;
+    switch (this.functionality) {
+      case RecentListsModalFunctionality.AddItemToList:
+        this.title = 'Select a list to add to:';
+        break;
+      case RecentListsModalFunctionality.CopyItemToList:
+        this.title = 'Select a list to copy to:';
+        break;
+      case RecentListsModalFunctionality.NavigateToList:
+      default:
+        this.title = 'Select a list to view:';
+        break;
+    }
   }
 
   async ngOnInit() {
@@ -54,27 +74,42 @@ export class CopyToListComponent implements OnInit {
       return dateB.getTime() - dateA.getTime();
     });
 
-    this.recentLists = await this.firebase.getListsFromIds(sorted.slice(0, 5));
-    for (let list of this.recentLists) {
-      let creator = await this.firebase.getUserById(list.creatorID);
-      if (creator) this.recentListCreators.push(creator.name);
-      else this.recentListCreators.push('Unknown');
+    this.recentLists = await this.firebase.getListsFromIds(sorted.slice(0, 10));
+    if (this.functionality === RecentListsModalFunctionality.NavigateToList) {
+      // Filter out the currenct list
+      this.recentLists = this.recentLists.filter((list) => list.id !== this.currentListId);
     }
+    const creatorPromises = this.recentLists.map((list) =>
+      this.firebase.getUserById(list.creatorID),
+    );
+    this.recentListCreators = await Promise.all(creatorPromises);
 
     this.loading = false;
   }
 
-  async selectList(list: List) {
+  async selectList(list: List, user: User | null) {
+    if (this.functionality === RecentListsModalFunctionality.NavigateToList) {
+      this.router.navigate(['/list', list.id], {
+        state: { list: list, user: user },
+      });
+      this.dialogRef.close();
+    } else if (
+      this.functionality === RecentListsModalFunctionality.AddItemToList
+    ) {
+      await this.selectListForItemCopy(list, true);
+    } else if (
+      this.functionality === RecentListsModalFunctionality.CopyItemToList
+    ) {
+      await this.selectListForItemCopy(list, false);
+    }
+  }
+
+  async selectListForItemCopy(list: List, customizeItem: boolean) {
     if (this.copyLoading) {
       return;
     }
 
-    if (this.data.copyImmediately) {
-      // Reset 'purchased' status for the new copy.
-      const itemCopy: Item = { ...this.item, purchased: false };
-      list.items?.push(itemCopy);
-      await this.saveAndClose(list);
-    } else {
+    if (customizeItem) {
       // Open the AddItemComponent to allow for edits before copying.
       const dialogRef = this.dialog.open(AddItemComponent, {
         data: { list, item: this.item, newItem: true },
@@ -88,6 +123,11 @@ export class CopyToListComponent implements OnInit {
           this.saveAndClose(list, true);
         }
       });
+    } else {
+      // Reset 'purchased' status for the new copy.
+      const itemCopy: Item = { ...this.item!, purchased: false };
+      list.items?.push(itemCopy);
+      await this.saveAndClose(list);
     }
   }
 
