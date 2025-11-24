@@ -14,6 +14,7 @@ export class HomeComponent implements OnInit {
   badEmail: boolean = false;
   email: string = '';
   christmasTheme: boolean = false;
+  fallTheme: boolean = false;
   recentLists: List[] = [];
   recentListCreators: (User | null)[] = [];
   loading: boolean = false;
@@ -27,8 +28,10 @@ export class HomeComponent implements OnInit {
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth() + 1;
 
-    if ([11, 12].includes(currentMonth)) {
+    if (currentMonth === 12) {
       this.christmasTheme = true;
+    } else if (currentMonth === 11) {
+      this.fallTheme = true;
     }
 
     // Retrieve the last used email
