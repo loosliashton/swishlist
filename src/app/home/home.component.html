@@ -1,4 +1,9 @@
-<body [ngClass]="{ 'christmas-body': christmasTheme }">
+<body
+  [ngClass]="{
+    'christmas-body': christmasTheme,
+    'fall-body': fallTheme,
+  }"
+>
   <div class="snowflakes">
     <div>
       @if (christmasTheme) {
@@ -21,17 +26,34 @@
         <div class="snowflake"></div>
         <div class="snowflake"></div>
       }
+      @if (fallTheme) {
+        <div class="leaf"></div>
+        <div class="leaf"></div>
+        <div class="leaf"></div>
+        <div class="leaf"></div>
+        <div class="leaf"></div>
+        <div class="leaf"></div>
+        <div class="leaf"></div>
+        <div class="leaf"></div>
+        <div class="leaf"></div>
+        <div class="leaf"></div>
+        <div class="leaf"></div>
+        <div class="leaf"></div>
+        <div class="leaf"></div>
+        <div class="leaf"></div>
+        <div class="leaf"></div>
+      }
       <div class="header">
         <h1
-          [ngClass]="{ 'white-title': christmasTheme }"
+          [ngClass]="{ 'white-title': christmasTheme || fallTheme }"
           class="center pad-top"
         >
           Swishlist
         </h1>
         <p
           [ngClass]="{
-            'explain-text': !christmasTheme,
-            'explain-text-christmas': christmasTheme,
+            'explain-text': !christmasTheme && !fallTheme,
+            'explain-text-christmas': christmasTheme || fallTheme,
           }"
         >
           Enter your email to view your lists or create a new one.
@@ -62,7 +84,9 @@
     @if (!loading) {
       @if (recentLists.length) {
         <div class="lists center pad-top">
-          <h3 [ngClass]="{ 'white-title': christmasTheme }">Recent Lists</h3>
+          <h3 [ngClass]="{ 'white-title': christmasTheme || fallTheme }">
+            Recent Lists
+          </h3>
           @for (list of recentLists; track list; let i = $index) {
             <app-recent-list
               [list]="list"
