@@ -1,9 +1,14 @@
+.header {
+  margin-bottom: 20px;
+}
+
 .list-item-card {
   cursor: pointer;
   background-color: white;
   padding: 15px 20px;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.05);
   margin-bottom: 15px;
   display: flex;
   align-items: center;
@@ -88,33 +93,62 @@
 }
 
 .btn-light {
-  background-color: #eeeeee;
+  background-color: rgb(237, 235, 255);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 25px;
+  transition: all 0.2s ease;
+  border: none;
 }
 
 .btn-light:hover {
-  background-color: #d0d0d0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .top-button {
   margin: 0 5px;
+  padding: 8px 16px;
+  font-weight: 500;
 }
 
-.gradient {
-  background: linear-gradient(120deg, #c2a500, #e0c10e, #e4af00);
-  background-size: 200% 100%;
-  background-position: 100% 0;
-  transition: 0.5s;
+.combined-actions {
+  display: flex;
+  align-items: center;
+  background-color: rgb(237, 235, 255);
+  border-radius: 35px;
+  padding: 5px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin: 20px auto;
+  width: fit-content;
+}
+
+.action-bar-btn {
+  background: none;
   border: none;
-  color: white;
-  text-align: center;
-  font-size: 16px;
-  border-radius: 10px;
+  padding: 12px 24px;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   cursor: pointer;
-  margin-bottom: 10px;
+  font-weight: 500;
+  font-size: 16px;
+  transition: background-color 0.2s;
 }
 
-.gradient:hover {
-  background-position: 0 0;
+.action-bar-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.action-divider {
+  width: 1px;
+  height: 24px;
+  background-color: rgba(0, 0, 0, 0.1);
+  margin: 0 5px;
+}
+
+.action-bar-btn:hover i {
+  color: #6200ea;
 }
 
 .ideas {
@@ -122,6 +156,19 @@
   width: 93%;
   max-width: 500px;
   margin: auto;
+}
+
+.ideas mat-accordion {
+  display: block;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.ideas mat-expansion-panel {
+  box-shadow: none !important;
+  border-radius: 12px !important;
+  background: white;
 }
 
 .ideas mat-form-field {

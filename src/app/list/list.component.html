@@ -15,12 +15,14 @@
 } @else {
   <div style="padding-bottom: 80px">
     <div class="center pad-top buttons-row">
+      @if (!editing) {
+        <button class="btn btn-light top-button" (click)="openShareModal()">
+          <i class="fa-solid fa-share fa-md black-icon"></i>
+          Share
+        </button>
+      }
       @if (!spoilers) {
         @if (!editing) {
-          <button class="btn btn-light top-button" (click)="openShareModal()">
-            <i class="fa-solid fa-share fa-md black-icon"></i>
-            Share
-          </button>
           <button class="btn btn-light top-button" (click)="editList()">
             <i class="fa-solid fa-edit fa-md black-icon"></i>
             Edit
@@ -154,18 +156,16 @@
     </div>
 
     @if (!spoilers && !editing) {
-      <div class="buttons">
-        <button class="btn round-button green" (click)="openAddModal()">
-          <i class="fa-solid fa-plus fa-xl white-icon"></i>
+      <div class="combined-actions">
+        <button class="action-bar-btn" (click)="openAddModal()">
+          <i class="fa-solid fa-plus fa-lg"></i>
+          <span>Add Item</span>
         </button>
         @if (list?.items?.length) {
-          <button
-            class="btn gradient"
-            (click)="openSuggestionModal()"
-            style="margin-top: 15px; color: white"
-          >
-            <i class="fa-solid fa-wand-magic-sparkles"></i>
-            Suggestions
+          <div class="action-divider"></div>
+          <button class="action-bar-btn" (click)="openSuggestionModal()">
+            <i class="fa-solid fa-wand-magic-sparkles fa-lg"></i>
+            <span>Suggestions</span>
           </button>
         }
       </div>
