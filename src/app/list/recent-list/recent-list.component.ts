@@ -1,19 +1,23 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-
+import { CommonModule } from '@angular/common';
 import { List } from 'src/models/list';
 
 @Component({
-    selector: 'app-recent-list',
-    imports: [],
-    templateUrl: './recent-list.component.html',
-    styleUrl: './recent-list.component.css'
+  selector: 'app-recent-list',
+  imports: [CommonModule],
+  templateUrl: './recent-list.component.html',
+  styleUrl: './recent-list.component.css',
 })
 export class RecentListComponent {
   @Input() list!: List;
   @Input() creator: string = 'Unknown';
   @Input() showDeleteButton: boolean = false;
+  @Input() theme: 'christmas' | 'fall' | '' = '';
   @Output() listClicked = new EventEmitter<List>();
-  @Output() deleteClicked = new EventEmitter<{ list: List; event: MouseEvent }>();
+  @Output() deleteClicked = new EventEmitter<{
+    list: List;
+    event: MouseEvent;
+  }>();
 
   onClick() {
     this.listClicked.emit(this.list);

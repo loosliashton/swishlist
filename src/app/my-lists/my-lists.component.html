@@ -13,7 +13,7 @@
     </div>
     <div class="lists">
       @for (list of lists; track list) {
-        <div class="list" (click)="navigateToList(list)">
+        <div class="list blue-clickable" (click)="navigateToList(list)">
           <div class="list-header">
             <h4>{{ list.name }}</h4>
             <div class="list-info">
@@ -57,26 +57,13 @@
     @if (!loadingSaved && !loading) {
       <div class="lists">
         @for (list of savedLists; track list; let i = $index) {
-          <div class="saved-list" (click)="navigateToList(list)">
-            <div class="list-header">
-              <p>
-                <strong>{{ list.name }}</strong
-                ><br />{{ savedListCreators[i] }}
-              </p>
-              <div class="list-info">
-                <p>
-                  {{ list.items?.length }}
-                  {{ list.items?.length === 1 ? "item" : "items" }}
-                </p>
-                <div (click)="unsaveList(list, $event)">
-                  <i
-                    class="fa-solid fa-xmark fa-xl"
-                    style="padding-left: 10px"
-                  ></i>
-                </div>
-              </div>
-            </div>
-          </div>
+          <app-recent-list
+            [list]="list"
+            [creator]="savedListCreators[i]"
+            [showDeleteButton]="true"
+            (listClicked)="navigateToList($event)"
+            (deleteClicked)="unsaveList($event.list, $event.event)"
+          ></app-recent-list>
         }
       </div>
     }

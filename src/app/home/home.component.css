@@ -12,6 +12,12 @@
   margin-top: 10px;
 }
 
+.submit-button {
+  width: 35px;
+  height: 30px;
+  border-radius: 1000px;
+}
+
 .row-layout {
   display: flex;
   flex-direction: row;
@@ -57,6 +63,7 @@
 }
 
 /* https://codepen.io/codeconvey/pen/xRzQay */
+/* Christmas theme */
 
 .snowflake {
   height: 5px;
@@ -181,7 +188,7 @@
 /* Fall Theme */
 
 .fall-body {
-  background: #2e1a0f; /* Dark brown background */
+  background: #2e1a0f;
 }
 
 @keyframes leaves-fall {
@@ -211,7 +218,7 @@
   z-index: 9999;
   width: 10px;
   height: 10px;
-  background-color: #d35400; /* Default orange */
+  background-color: #d35400;
   border-radius: 5px 0px;
   opacity: 0.8;
   -webkit-user-select: none;
@@ -232,19 +239,19 @@
 }
 
 .leaf:nth-of-type(2n) {
-  background-color: #c0392b; /* Red */
+  background-color: #c0392b;
 }
 
 .leaf:nth-of-type(3n) {
-  background-color: #f1c40f; /* Yellow */
+  background-color: #f1c40f;
 }
 
 .leaf:nth-of-type(4n) {
-  background-color: #e67e22; /* Orange */
+  background-color: #e67e22;
 }
 
 .leaf:nth-of-type(5n) {
-  background-color: #8b4513; /* SaddleBrown */
+  background-color: #8b4513;
 }
 
 .leaf:nth-of-type(0) {

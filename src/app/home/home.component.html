@@ -1,12 +1,12 @@
 <body
   [ngClass]="{
-    'christmas-body': christmasTheme,
-    'fall-body': fallTheme,
+    'christmas-body': theme === 'christmas',
+    'fall-body': theme === 'fall',
   }"
 >
   <div class="snowflakes">
     <div>
-      @if (christmasTheme) {
+      @if (theme === "christmas") {
         <div class="snowflake"></div>
         <div class="snowflake"></div>
         <div class="snowflake"></div>
@@ -26,7 +26,7 @@
         <div class="snowflake"></div>
         <div class="snowflake"></div>
       }
-      @if (fallTheme) {
+      @if (theme === "fall") {
         <div class="leaf"></div>
         <div class="leaf"></div>
         <div class="leaf"></div>
@@ -45,15 +45,17 @@
       }
       <div class="header">
         <h1
-          [ngClass]="{ 'white-title': christmasTheme || fallTheme }"
+          [ngClass]="{
+            'white-title': theme === 'christmas' || theme === 'fall',
+          }"
           class="center pad-top"
         >
           Swishlist
         </h1>
         <p
           [ngClass]="{
-            'explain-text': !christmasTheme && !fallTheme,
-            'explain-text-christmas': christmasTheme || fallTheme,
+            'explain-text': theme !== 'christmas' && theme !== 'fall',
+            'explain-text-christmas': theme === 'christmas' || theme === 'fall',
           }"
         >
           Enter your email to view your lists or create a new one.
@@ -70,8 +72,15 @@
             name="email"
             (focus)="emailInput.select()"
           />
-          <button class="submit-button green" (click)="goToMyLists(email)">
-            <i class="fa-solid fa-gift white-icon"></i>
+          <button
+            class="submit-button blue-clickable"
+            [ngClass]="{
+              christmas: theme === 'christmas',
+              fall: theme === 'fall',
+            }"
+            (click)="goToMyLists(email)"
+          >
+            <i class="fa-solid fa-gift black-icon"></i>
           </button>
         </div>
       </form>
@@ -84,7 +93,11 @@
     @if (!loading) {
       @if (recentLists.length) {
         <div class="lists center pad-top">
-          <h3 [ngClass]="{ 'white-title': christmasTheme || fallTheme }">
+          <h3
+            [ngClass]="{
+              'white-title': theme === 'christmas' || theme === 'fall',
+            }"
+          >
             Recent Lists
           </h3>
           @for (list of recentLists; track list; let i = $index) {
@@ -92,6 +105,7 @@
               [list]="list"
               [creator]="recentListCreators[i]?.name || 'Unknown User'"
               [showDeleteButton]="true"
+              [theme]="theme"
               (listClicked)="navigateToList($event, recentListCreators[i])"
               (deleteClicked)="removeList($event.list, $event.event)"
             ></app-recent-list>

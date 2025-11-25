@@ -7,12 +7,6 @@ button {
   border: none;
 }
 
-.submit-button {
-  width: 35px;
-  height: 30px;
-  border-radius: 1000px;
-}
-
 .green {
   background-color: green;
 }
@@ -110,4 +104,38 @@ body {
   opacity: 0.5;
   cursor: not-allowed;
   transition: opacity 0.3s ease-in-out;
+}
+
+.blue-clickable {
+  background-color: rgb(237, 235, 255);
+  transition: background-color 0.2s ease;
+}
+
+.blue-clickable:hover {
+  background-color: rgb(217, 215, 255);
+}
+
+.fall {
+  background-color: #dd6f20;
+  transition: background-color 0.2s ease;
+}
+
+.fall:hover {
+  background-color: #ee872d;
+}
+
+.fall .accent {
+  color: #5c2b08 !important;
+}
+
+.christmas {
+  background-color: #bfefff;
+}
+
+.christmas:hover {
+  background-color: #99dfff;
+}
+
+.christmas .accent {
+  color: #131313 !important;
 }
