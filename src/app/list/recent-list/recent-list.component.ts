@@ -12,7 +12,7 @@ export class RecentListComponent {
   @Input() list!: List;
   @Input() creator: string = 'Unknown';
   @Input() showDeleteButton: boolean = false;
-  @Input() theme: 'christmas' | 'fall' | '' = '';
+  @Input() theme: string = '';
   @Output() listClicked = new EventEmitter<List>();
   @Output() deleteClicked = new EventEmitter<{
     list: List;
