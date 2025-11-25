@@ -108,51 +108,53 @@
       </div>
     }
     <div class="list" [ngClass]="{ disabled: saveListLoading }">
-      @for (item of list?.items; track $index; let i = $index) {
-        <div
-          class="list-item-card"
-          [ngClass]="{ highlighted: spoilers && item.purchased }"
-          (click)="editing && !spoilers ? null : openItemModal(item)"
-        >
-          <div class="item-content">
-            <div class="item-name">{{ item.name }}</div>
-          </div>
-
-          @if (!spoilers) {
-            <div class="item-actions">
-              @if (!editing) {
-                <button
-                  class="action-btn edit"
-                  (click)="editItem(item); $event.stopPropagation()"
-                >
-                  <i class="fa-solid fa-pen"></i>
-                </button>
-                <button
-                  class="action-btn delete"
-                  (click)="deleteItem(i); $event.stopPropagation()"
-                >
-                  <i class="fa-solid fa-trash"></i>
-                </button>
-              } @else {
-                <button
-                  class="action-btn"
-                  (click)="moveItem(i, 'up')"
-                  [disabled]="i === 0"
-                >
-                  <i class="fa-solid fa-arrow-up"></i>
-                </button>
-                <button
-                  class="action-btn"
-                  (click)="moveItem(i, 'down')"
-                  [disabled]="i === list!.items!.length - 1"
-                >
-                  <i class="fa-solid fa-arrow-down"></i>
-                </button>
-              }
+      <div class="list-items-container">
+        @for (item of list?.items; track $index; let i = $index) {
+          <div
+            class="list-item-card"
+            [ngClass]="{ highlighted: spoilers && item.purchased }"
+            (click)="editing && !spoilers ? null : openItemModal(item)"
+          >
+            <div class="item-content">
+              <div class="item-name">{{ item.name }}</div>
             </div>
-          }
-        </div>
-      }
+
+            @if (!spoilers) {
+              <div class="item-actions">
+                @if (!editing) {
+                  <button
+                    class="action-btn edit"
+                    (click)="editItem(item); $event.stopPropagation()"
+                  >
+                    <i class="fa-solid fa-pen"></i>
+                  </button>
+                  <button
+                    class="action-btn delete"
+                    (click)="deleteItem(i); $event.stopPropagation()"
+                  >
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                } @else {
+                  <button
+                    class="action-btn"
+                    (click)="moveItem(i, 'up')"
+                    [disabled]="i === 0"
+                  >
+                    <i class="fa-solid fa-arrow-up"></i>
+                  </button>
+                  <button
+                    class="action-btn"
+                    (click)="moveItem(i, 'down')"
+                    [disabled]="i === list!.items!.length - 1"
+                  >
+                    <i class="fa-solid fa-arrow-down"></i>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
     </div>
 
     @if (!spoilers && !editing) {
