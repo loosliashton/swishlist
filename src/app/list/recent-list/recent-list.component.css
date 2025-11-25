@@ -1,5 +1,4 @@
 .recent-list {
-  background-color: rgb(255, 235, 235);
   padding: 15px;
   border-radius: 15px;
   cursor: pointer;
@@ -7,10 +6,6 @@
   align-items: center;
   transition: background-color 0.2s ease;
   margin-top: 10px;
-}
-
-.recent-list:hover {
-  background-color: rgb(255, 220, 220);
 }
 
 .recent-list .list-header p {

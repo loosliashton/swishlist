@@ -15,12 +15,14 @@
 } @else {
   <div style="padding-bottom: 80px">
     <div class="center pad-top buttons-row">
+      @if (!editing) {
+        <button class="btn btn-light top-button" (click)="openShareModal()">
+          <i class="fa-solid fa-share fa-md black-icon"></i>
+          Share
+        </button>
+      }
       @if (!spoilers) {
         @if (!editing) {
-          <button class="btn btn-light top-button" (click)="openShareModal()">
-            <i class="fa-solid fa-share fa-md black-icon"></i>
-            Share
-          </button>
           <button class="btn btn-light top-button" (click)="editList()">
             <i class="fa-solid fa-edit fa-md black-icon"></i>
             Edit
@@ -107,48 +109,46 @@
     }
     <div class="list" [ngClass]="{ disabled: saveListLoading }">
       @for (item of list?.items; track $index; let i = $index) {
-        <div class="list-row">
+        <div
+          class="list-item-card"
+          [ngClass]="{ highlighted: spoilers && item.purchased }"
+          (click)="editing && !spoilers ? null : openItemModal(item)"
+        >
+          <div class="item-content">
+            <div class="item-name">{{ item.name }}</div>
+          </div>
+
           @if (!spoilers) {
-            <div
-              class="item"
-              style="
-                border-bottom-right-radius: 0%;
-                border-top-right-radius: 0%;
-              "
-              (click)="editing ? null : openItemModal(item)"
-            >
-              <div class="item-name">{{ item.name }}</div>
-            </div>
-            @if (!editing) {
-              <button class="edit-button blue" (click)="editItem(item)">
-                <i class="fa-solid fa-pen fa-lg white-icon"></i>
-              </button>
-              <button class="delete-button red" (click)="deleteItem(i)">
-                <i class="fa-solid fa-trash fa-lg white-icon"></i>
-              </button>
-            } @else {
-              <button
-                class="edit-button gray"
-                (click)="moveItem(i, 'up')"
-                [disabled]="i === 0"
-              >
-                <i class="fa-solid fa-arrow-up fa-lg white-icon"></i>
-              </button>
-              <button
-                class="delete-button gray"
-                (click)="moveItem(i, 'down')"
-                [disabled]="i === list!.items!.length - 1"
-              >
-                <i class="fa-solid fa-arrow-down fa-lg white-icon"></i>
-              </button>
-            }
-          } @else {
-            <div
-              class="item"
-              (click)="openItemModal(item)"
-              [ngClass]="{ highlighted: item.purchased }"
-            >
-              <div class="item-name">{{ item.name }}</div>
+            <div class="item-actions">
+              @if (!editing) {
+                <button
+                  class="action-btn edit"
+                  (click)="editItem(item); $event.stopPropagation()"
+                >
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+                <button
+                  class="action-btn delete"
+                  (click)="deleteItem(i); $event.stopPropagation()"
+                >
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              } @else {
+                <button
+                  class="action-btn"
+                  (click)="moveItem(i, 'up')"
+                  [disabled]="i === 0"
+                >
+                  <i class="fa-solid fa-arrow-up"></i>
+                </button>
+                <button
+                  class="action-btn"
+                  (click)="moveItem(i, 'down')"
+                  [disabled]="i === list!.items!.length - 1"
+                >
+                  <i class="fa-solid fa-arrow-down"></i>
+                </button>
+              }
             </div>
           }
         </div>
@@ -156,18 +156,16 @@
     </div>
 
     @if (!spoilers && !editing) {
-      <div class="buttons">
-        <button class="btn round-button green" (click)="openAddModal()">
-          <i class="fa-solid fa-plus fa-xl white-icon"></i>
+      <div class="combined-actions">
+        <button class="action-bar-btn" (click)="openAddModal()">
+          <i class="fa-solid fa-plus fa-lg"></i>
+          <span>Add Item</span>
         </button>
         @if (list?.items?.length) {
-          <button
-            class="btn gradient"
-            (click)="openSuggestionModal()"
-            style="margin-top: 15px; color: white"
-          >
-            <i class="fa-solid fa-wand-magic-sparkles"></i>
-            Suggestions
+          <div class="action-divider"></div>
+          <button class="action-bar-btn" (click)="openSuggestionModal()">
+            <i class="fa-solid fa-wand-magic-sparkles fa-lg"></i>
+            <span>Suggestions</span>
           </button>
         }
       </div>

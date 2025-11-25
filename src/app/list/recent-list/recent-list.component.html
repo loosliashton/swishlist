@@ -1,10 +1,14 @@
-<div class="recent-list" (click)="onClick()">
+<div
+  [ngClass]="{ christmas: theme === 'christmas', fall: theme === 'fall' }"
+  class="recent-list blue-clickable"
+  (click)="onClick()"
+>
   <div class="list-header">
     <p class="list-desc">
       <strong>{{ list.name }}</strong
       ><br />{{ creator }}
     </p>
-    <div class="list-info">
+    <div class="list-info accent">
       <p>
         {{ list.items?.length }}
         {{ list.items?.length === 1 ? "item" : "items" }}

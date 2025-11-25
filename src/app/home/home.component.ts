@@ -13,8 +13,7 @@ import { FirebaseService } from 'src/services/firebase.service';
 export class HomeComponent implements OnInit {
   badEmail: boolean = false;
   email: string = '';
-  christmasTheme: boolean = false;
-  fallTheme: boolean = false;
+  theme: string = '';
   recentLists: List[] = [];
   recentListCreators: (User | null)[] = [];
   loading: boolean = false;
@@ -29,9 +28,9 @@ export class HomeComponent implements OnInit {
     const currentMonth = currentDate.getMonth() + 1;
 
     if (currentMonth === 12) {
-      this.christmasTheme = true;
+      this.theme = 'christmas';
     } else if (currentMonth === 11) {
-      this.fallTheme = true;
+      this.theme = 'fall';
     }
 
     // Retrieve the last used email
