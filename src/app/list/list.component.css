@@ -1,39 +1,62 @@
-.item {
-  background-color: lightgray;
-  padding: 10px;
-  border-radius: 10px;
+.list-item-card {
   cursor: pointer;
-  width: 100%;
+  background-color: white;
+  padding: 15px 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 15px;
+  display: flex;
   align-items: center;
   justify-content: space-between;
-}
-
-.name-edit-button {
-  height: 25px;
-  width: 25px;
-  border-radius: 50%;
-  margin-right: 5px;
-}
-
-.list-row {
-  margin-bottom: 10px;
-  display: flex;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
   width: 90%;
   max-width: 500px;
 }
 
-.delete-button {
-  border-top-right-radius: 10px;
-  border-bottom-right-radius: 10px;
-  width: 60px;
-}
-
-.edit-button {
-  width: 60px;
+.list-item-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .item-name {
-  font-size: 20px;
+  font-size: 18px;
+  font-weight: 500;
+  color: #333;
+}
+
+.item-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+}
+
+.action-btn:hover {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.action-btn.delete:hover {
+  background-color: #fee;
+  color: #d32f2f;
+}
+
+.action-btn.edit:hover {
+  background-color: #e3f2fd;
+  color: #1976d2;
 }
 
 .list {
@@ -45,12 +68,8 @@
   transition: opacity 0.3s ease-in-out;
 }
 
-.highlighted {
-  background-color: rgb(243, 243, 243);
-}
-
-.highlighted > div {
-  color: gray;
+.highlighted .item-name {
+  color: #aaa;
   text-decoration: line-through;
 }
 
