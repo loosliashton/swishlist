@@ -46,6 +46,7 @@ export class ListComponent {
 
     this.route.paramMap.subscribe(async (params) => {
       this.loading = true;
+      this.editing = false;
       const id = params.get('id');
       if (!id) return;
 
