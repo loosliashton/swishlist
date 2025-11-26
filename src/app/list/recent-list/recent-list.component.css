@@ -4,8 +4,16 @@
   cursor: pointer;
   display: flex;
   align-items: center;
-  transition: background-color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s,
+    box-shadow 0.2s;
   margin-top: 10px;
+}
+
+.recent-list:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
 }
 
 .recent-list .list-header p {
