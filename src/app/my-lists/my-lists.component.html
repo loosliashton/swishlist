@@ -6,40 +6,39 @@
 @if (!loading) {
   <div style="padding-bottom: 20px">
     <div class="center header pad-top">
-      <button class="edit-button green" (click)="changeName()">
-        <i class="fa-solid fa-pen fa-sm white-icon"></i>
+      <button class="edit-button btn-blue" (click)="changeName()">
+        <i class="fa-solid fa-pen fa-sm blue-icon"></i>
       </button>
       <h1>{{ user?.name }}'s Lists</h1>
     </div>
     <div class="lists">
       @for (list of lists; track list) {
-        <div class="list blue-clickable" (click)="navigateToList(list)">
-          <div class="list-header">
-            <h4>{{ list.name }}</h4>
+        <div class="list-item-card" (click)="navigateToList(list)">
+          <div class="item-content">
+            <div class="item-name">{{ list.name }}</div>
             <div class="list-info">
               <p>
                 {{ list.items?.length }}
                 {{ list.items?.length === 1 ? "item" : "items" }}
               </p>
-              <div>
-                <i
-                  class="fa-solid fa-trash fa-lg"
-                  style="padding-left: 10px"
-                  (click)="deleteList(list, $event)"
-                ></i>
-              </div>
             </div>
+          </div>
+          <div class="item-actions">
+            <button
+              class="action-btn delete"
+              (click)="deleteList(list, $event); $event.stopPropagation()"
+            >
+              <i class="fa-solid fa-trash"></i>
+            </button>
           </div>
         </div>
       }
     </div>
-    <div class="buttons">
-      <button class="btn add-list-button green" (click)="addList()">
-        <i
-          class="fa-solid fa-plus fa-lg white-icon"
-          style="margin-right: 10px"
-        ></i>
-        Add List
+
+    <div class="combined-actions">
+      <button class="action-bar-btn" (click)="addList()">
+        <i class="fa-solid fa-plus fa-lg"></i>
+        <span>Add List</span>
       </button>
     </div>
   </div>
