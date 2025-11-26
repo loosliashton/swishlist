@@ -2,8 +2,7 @@
   <div class="loading center pad-top">
     <div class="spinner"></div>
   </div>
-}
-@if (!loading) {
+} @else {
   <div style="padding-bottom: 20px">
     <div class="center header pad-top">
       <button class="edit-button btn-blue" (click)="changeName()">
@@ -42,18 +41,11 @@
       </button>
     </div>
   </div>
-}
-@if (user?.savedLists?.length) {
-  <div>
-    <div class="center pad-top-large">
-      <h3>Saved Lists</h3>
-    </div>
-    @if (loadingSaved) {
-      <div class="loading center pad-top">
-        <div class="spinner"></div>
+  @if (user?.savedLists?.length) {
+    <div>
+      <div class="center pad-top-large">
+        <h3>Saved Lists</h3>
       </div>
-    }
-    @if (!loadingSaved && !loading) {
       <div class="lists">
         @for (list of savedLists; track list; let i = $index) {
           <app-recent-list
@@ -65,6 +57,6 @@
           ></app-recent-list>
         }
       </div>
-    }
-  </div>
+    </div>
+  }
 }
