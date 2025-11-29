@@ -63,24 +63,26 @@ export class AddItemComponent {
     try {
       const { keepaUrl, affiliateUrl } = this.firebase.isAmazonUrl(this.url)
         ? await this.firebase.getAmazonLinks(this.url)
-        : { keepaUrl: '', affiliateUrl: this.url };
+        : { keepaUrl: null, affiliateUrl: null };
 
       // If editing an item, update it.
       if (this.item) {
         this.item.name = this.name;
-        this.item.url = affiliateUrl;
+        this.item.url = this.url;
         this.item.details = this.details;
         this.item.camelUrl = keepaUrl;
+        this.item.affiliateUrl = affiliateUrl;
       } else {
         // Otherwise, create a new item and add it to the list.
         // This handles both creating a brand new item,
         // and creating a new item pre-filled from an existing one.
         const newItem: Item = {
           name: this.name,
-          url: affiliateUrl,
+          url: this.url,
           purchased: false,
           details: this.details,
           camelUrl: keepaUrl,
+          affiliateUrl: affiliateUrl,
         };
         this.list.items?.push(newItem);
       }

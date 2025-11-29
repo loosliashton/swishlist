@@ -1,6 +1,8 @@
 <h2 mat-dialog-title>
   @if (item.url) {
-    <a href="{{ item.url }}" target="_blank">{{ item.name }}</a>
+    <a href="{{ item.affiliateUrl || item.url }}" target="_blank">{{
+      item.name
+    }}</a>
   }
   @if (!item.url) {
     <span>{{ item.name }}</span>

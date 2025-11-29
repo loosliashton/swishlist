@@ -63,3 +63,12 @@ exports.getAmazonLinks = functions.https.onCall(
     };
   },
 );
+
+// Legacy function for compatibility with old code
+exports.getCamelLink = functions.https.onCall(
+  async (data: { url: string }, context: any) => {
+    const result = await amazonAsin.asyncParseAsin(data.url);
+    if (!result.ASIN) return '';
+    return `https://keepa.com/#!search/1-${result.ASIN}`;
+  },
+);
