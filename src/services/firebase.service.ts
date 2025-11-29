@@ -252,10 +252,12 @@ export class FirebaseService {
       });
   }
 
-  async getCamelLink(url: string): Promise<string> {
-    const getCamelLink = httpsCallable(functions, 'getCamelLink');
+  async getAmazonLinks(
+    url: string,
+  ): Promise<{ keepaUrl: string; affiliateUrl: string }> {
+    const getAmazonLinks = httpsCallable(functions, 'getAmazonLinks');
 
-    return getCamelLink({ url: url })
+    return getAmazonLinks({ url: url })
       .then((result: any) => {
         return result.data;
       })

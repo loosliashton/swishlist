@@ -61,26 +61,26 @@ export class AddItemComponent {
 
     this.loading = true;
     try {
-      const camelUrl = this.firebase.isAmazonUrl(this.url)
-        ? await this.firebase.getCamelLink(this.url)
-        : '';
+      const { keepaUrl, affiliateUrl } = this.firebase.isAmazonUrl(this.url)
+        ? await this.firebase.getAmazonLinks(this.url)
+        : { keepaUrl: '', affiliateUrl: this.url };
 
       // If editing an item, update it.
       if (this.item) {
         this.item.name = this.name;
-        this.item.url = this.url;
+        this.item.url = affiliateUrl;
         this.item.details = this.details;
-        this.item.camelUrl = camelUrl;
+        this.item.camelUrl = keepaUrl;
       } else {
         // Otherwise, create a new item and add it to the list.
         // This handles both creating a brand new item,
         // and creating a new item pre-filled from an existing one.
         const newItem: Item = {
           name: this.name,
-          url: this.url,
+          url: affiliateUrl,
           purchased: false,
           details: this.details,
-          camelUrl: camelUrl,
+          camelUrl: keepaUrl,
         };
         this.list.items?.push(newItem);
       }

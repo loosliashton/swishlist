@@ -52,10 +52,14 @@ exports.getSuggestions = functions.https.onCall(
 
 const amazonAsin = require('amazon-asin');
 
-exports.getCamelLink = functions.https.onCall(
+exports.getAmazonLinks = functions.https.onCall(
   async (data: { url: string }, context: any) => {
+    const storeId = 'swishlist00-20';
     const result = await amazonAsin.asyncParseAsin(data.url);
-    if (!result.ASIN) return '';
-    return `https://keepa.com/#!search/1-${result.ASIN}`;
+    if (!result.ASIN) return { keepaUrl: '', affiliateUrl: data.url };
+    return {
+      keepaUrl: `https://keepa.com/#!search/1-${result.ASIN}`,
+      affiliateUrl: `http://www.amazon.com/dp/${result.ASIN}/ref=nosim?tag=${storeId}`,
+    };
   },
 );
