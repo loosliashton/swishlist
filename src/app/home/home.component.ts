@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { List } from 'src/models/list';
 import { User } from 'src/models/user';
 import { FirebaseService } from 'src/services/firebase.service';
+import { StorageService } from 'src/services/storage.service';
 
 @Component({
   selector: 'app-home',
@@ -21,6 +22,7 @@ export class HomeComponent implements OnInit {
   constructor(
     private router: Router,
     private firebase: FirebaseService,
+    private storageService: StorageService,
   ) {}
 
   async ngOnInit() {
@@ -34,27 +36,19 @@ export class HomeComponent implements OnInit {
     }
 
     // Retrieve the last used email
-    const lastEmail = localStorage.getItem('lastEmail');
+    const lastEmail = this.storageService.getLastEmail();
     if (lastEmail) {
       this.email = lastEmail;
     }
 
     // Retrieve recent lists
-    const recentListsObject = JSON.parse(
-      localStorage.getItem('recentLists') || '{}',
-    );
-    let f = Object.keys(recentListsObject).length;
-    if (!Object.keys(recentListsObject).length) return;
+    const sortedIds = this.storageService.getSortedRecentListIds();
+    if (!sortedIds.length) return;
     this.loading = true;
 
-    // Sort the recent lists by date
-    let sorted = Object.keys(recentListsObject).sort((a, b) => {
-      let dateA = new Date(recentListsObject[a]);
-      let dateB = new Date(recentListsObject[b]);
-      return dateB.getTime() - dateA.getTime();
-    });
-
-    this.recentLists = await this.firebase.getListsFromIds(sorted.slice(0, 10));
+    this.recentLists = await this.firebase.getListsFromIds(
+      sortedIds.slice(0, 10),
+    );
     const creatorPromises = this.recentLists.map((list) =>
       this.firebase.getUserById(list.creatorID),
     );
@@ -75,7 +69,7 @@ export class HomeComponent implements OnInit {
     email = email.toLowerCase().trim();
 
     if (emailPattern.test(email)) {
-      localStorage.setItem('lastEmail', email);
+      this.storageService.setLastEmail(email);
       this.router.navigate(['/my-lists'], { queryParams: { email } });
     } else {
       this.badEmail = true;
@@ -90,8 +84,6 @@ export class HomeComponent implements OnInit {
       (_name, i) => i !== index,
     );
 
-    let recentLists = JSON.parse(localStorage.getItem('recentLists') || '{}');
-    delete recentLists[list.id!];
-    localStorage.setItem('recentLists', JSON.stringify(recentLists));
+    this.storageService.removeRecentList(list.id!);
   }
 }

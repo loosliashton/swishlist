@@ -15,6 +15,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { AddItemComponent } from '../../add-item/add-item.component';
 import { RecentListsModalFunctionality } from './recent-lists-modal-functionality.enum';
 import { User } from 'src/models/user';
+import { StorageService } from 'src/services/storage.service';
 
 @Component({
   selector: 'app-recent-lists-modal',
@@ -40,7 +41,12 @@ export class RecentListsModalComponent implements OnInit {
     public dialogRef: MatDialogRef<RecentListsModalComponent>,
     public dialog: MatDialog,
     @Inject(MAT_DIALOG_DATA)
-    public data: { item: Item; functionality: RecentListsModalFunctionality, currentListId?: string },
+    public data: {
+      item: Item;
+      functionality: RecentListsModalFunctionality;
+      currentListId?: string;
+    },
+    private storageService: StorageService,
   ) {
     this.item = data.item;
     this.currentListId = data.currentListId || null;
@@ -61,23 +67,18 @@ export class RecentListsModalComponent implements OnInit {
 
   async ngOnInit() {
     // Retrieve recent lists
-    const recentListsObject = JSON.parse(
-      localStorage.getItem('recentLists') || '{}',
-    );
-    if (!Object.keys(recentListsObject).length) return;
+    const sortedIds = this.storageService.getSortedRecentListIds();
+    if (!sortedIds.length) return;
     this.loading = true;
 
-    // Sort the recent lists by date
-    let sorted = Object.keys(recentListsObject).sort((a, b) => {
-      let dateA = new Date(recentListsObject[a]);
-      let dateB = new Date(recentListsObject[b]);
-      return dateB.getTime() - dateA.getTime();
-    });
-
-    this.recentLists = await this.firebase.getListsFromIds(sorted.slice(0, 10));
+    this.recentLists = await this.firebase.getListsFromIds(
+      sortedIds.slice(0, 10),
+    );
     if (this.functionality === RecentListsModalFunctionality.NavigateToList) {
       // Filter out the currenct list
-      this.recentLists = this.recentLists.filter((list) => list.id !== this.currentListId);
+      this.recentLists = this.recentLists.filter(
+        (list) => list.id !== this.currentListId,
+      );
     }
     const creatorPromises = this.recentLists.map((list) =>
       this.firebase.getUserById(list.creatorID),
