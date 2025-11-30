@@ -1,5 +1,6 @@
 const functions = require('firebase-functions');
 
+// Get suggestions
 const {
   GoogleGenerativeAI,
   HarmCategory,
@@ -50,6 +51,7 @@ exports.getSuggestions = functions.https.onCall(
   },
 );
 
+// Get Amazon links
 const amazonAsin = require('amazon-asin');
 
 exports.getAmazonLinks = functions.https.onCall(
@@ -57,9 +59,14 @@ exports.getAmazonLinks = functions.https.onCall(
     const storeId = 'swishlist00-20';
     const result = await amazonAsin.asyncParseAsin(data.url);
     if (!result.ASIN) return { keepaUrl: '', affiliateUrl: data.url };
+    let keepaUrl = `https://keepa.com/#!search/1-${result.ASIN}`;
+    // Preserve any existing affiliate tags
+    let affiliateUrl = data.url.includes('tag=')
+      ? null
+      : `http://www.amazon.com/dp/${result.ASIN}/ref=nosim?tag=${storeId}`;
     return {
-      keepaUrl: `https://keepa.com/#!search/1-${result.ASIN}`,
-      affiliateUrl: `http://www.amazon.com/dp/${result.ASIN}/ref=nosim?tag=${storeId}`,
+      keepaUrl,
+      affiliateUrl,
     };
   },
 );
