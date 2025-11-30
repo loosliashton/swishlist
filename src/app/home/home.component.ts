@@ -46,13 +46,11 @@ export class HomeComponent implements OnInit {
     if (!sortedIds.length) return;
     this.loading = true;
 
-    this.recentLists = await this.firebase.getListsFromIds(
+    const { lists, creators } = await this.firebase.getListsWithCreators(
       sortedIds.slice(0, 10),
     );
-    const creatorPromises = this.recentLists.map((list) =>
-      this.firebase.getUserById(list.creatorID),
-    );
-    this.recentListCreators = await Promise.all(creatorPromises);
+    this.recentLists = lists;
+    this.recentListCreators = creators;
 
     this.loading = false;
   }

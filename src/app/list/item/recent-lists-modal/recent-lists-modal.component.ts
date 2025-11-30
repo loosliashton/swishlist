@@ -71,19 +71,22 @@ export class RecentListsModalComponent implements OnInit {
     if (!sortedIds.length) return;
     this.loading = true;
 
-    this.recentLists = await this.firebase.getListsFromIds(
+    const { lists, creators } = await this.firebase.getListsWithCreators(
       sortedIds.slice(0, 10),
     );
+    this.recentLists = lists;
+    this.recentListCreators = creators;
+
     if (this.functionality === RecentListsModalFunctionality.NavigateToList) {
       // Filter out the currenct list
-      this.recentLists = this.recentLists.filter(
-        (list) => list.id !== this.currentListId,
+      const index = this.recentLists.findIndex(
+        (list) => list.id === this.currentListId,
       );
+      if (index !== -1) {
+        this.recentLists.splice(index, 1);
+        this.recentListCreators.splice(index, 1);
+      }
     }
-    const creatorPromises = this.recentLists.map((list) =>
-      this.firebase.getUserById(list.creatorID),
-    );
-    this.recentListCreators = await Promise.all(creatorPromises);
 
     this.loading = false;
   }
