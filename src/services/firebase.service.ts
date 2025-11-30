@@ -184,6 +184,46 @@ export class FirebaseService {
     return listsArrays.flat();
   }
 
+  async getUsersFromIds(userIds: string[]): Promise<User[]> {
+    if (!userIds || userIds.length === 0) return [];
+
+    const chunks = [];
+    for (let i = 0; i < userIds.length; i += 30) {
+      chunks.push(userIds.slice(i, i + 30));
+    }
+
+    const userPromises = chunks.map(async (chunk) => {
+      const q = query(
+        collection(db, this.USERS_COL),
+        where(documentId(), 'in', chunk),
+      );
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map((doc) => {
+        const user = doc.data() as User;
+        user.id = doc.id;
+        return user;
+      });
+    });
+
+    const usersArrays = await Promise.all(userPromises);
+    return usersArrays.flat();
+  }
+
+  async getListsWithCreators(
+    listIds: string[],
+  ): Promise<{ lists: List[]; creators: (User | null)[] }> {
+    const lists = await this.getListsFromIds(listIds);
+    const creatorIds = [...new Set(lists.map((list) => list.creatorID))];
+    const creators = await this.getUsersFromIds(creatorIds);
+    const creatorsMap = new Map(creators.map((user) => [user.id, user]));
+
+    const creatorsArray = lists.map((list) => {
+      return creatorsMap.get(list.creatorID) ?? null;
+    });
+
+    return { lists, creators: creatorsArray };
+  }
+
   async addToSavedLists(user: User, list: List) {
     if (user.savedLists?.includes(list.id!) || user.lists?.includes(list.id!))
       return;

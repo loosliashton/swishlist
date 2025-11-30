@@ -34,19 +34,24 @@ export class MyListsComponent implements OnInit {
     this.user = await this.firebase.createUserIfNeeded(this.email);
     if (!this.user) return;
 
-    if (this.user.lists) {
-      this.lists = await this.firebase.getLists(this.user, false);
-    }
+    const listsPromise = this.user.lists
+      ? this.firebase.getLists(this.user, false)
+      : Promise.resolve([]);
 
-    if (this.user.savedLists) {
-      this.savedLists = await this.firebase.getLists(this.user, true);
-      this.savedListCreators = [];
-      for (let list of this.savedLists) {
-        let creator = await this.firebase.getUserById(list.creatorID);
-        if (creator) this.savedListCreators.push(creator.name);
-        else this.savedListCreators.push('Unknown');
-      }
-    }
+    const savedListsPromise = this.user.savedLists
+      ? this.firebase.getListsWithCreators(this.user.savedLists)
+      : Promise.resolve({ lists: [], creators: [] });
+
+    const [lists, savedListsData] = await Promise.all([
+      listsPromise,
+      savedListsPromise,
+    ]);
+
+    this.lists = lists;
+    this.savedLists = savedListsData.lists;
+    this.savedListCreators = savedListsData.creators.map(
+      (user) => user?.name ?? 'Unknown',
+    );
 
     this.loading = false;
   }
