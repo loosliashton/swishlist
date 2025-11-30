@@ -136,10 +136,18 @@ export class RecentListsModalComponent implements OnInit {
     this.copyLoading = true;
     try {
       await this.firebase.saveList(list);
-      this.snackbar.open('Item added', 'Close', { duration: 3000 });
       if (navigate) {
+        this.snackbar.open('Item added', 'Close', { duration: 3000 });
         // Navigate to the list view, prevent going back to the share target.
         this.router.navigate(['/list', list.id], { replaceUrl: true });
+      } else {
+        const snack = this.snackbar.open('Item added', 'Go to List', {
+          duration: 3000,
+        });
+        snack.onAction().subscribe(() => {
+          this.dialog.closeAll();
+          this.router.navigate(['/list', list.id]);
+        });
       }
       this.dialogRef.close(list.id);
     } catch (error) {

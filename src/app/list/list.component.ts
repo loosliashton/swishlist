@@ -44,13 +44,13 @@ export class ListComponent {
   ) {}
 
   async ngOnInit() {
-    const { passedList, passedUser } = this.initializeFromState();
-
     this.route.paramMap.subscribe(async (params) => {
       this.loading = true;
       this.editing = false;
       const id = params.get('id');
       if (!id) return;
+
+      const { passedList, passedUser } = this.initializeFromState();
 
       await this.loadList(id, passedList);
       if (!this.list) return;
