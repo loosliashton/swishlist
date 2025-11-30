@@ -54,7 +54,7 @@ export class HomeComponent implements OnInit {
       return dateB.getTime() - dateA.getTime();
     });
 
-    this.recentLists = await this.firebase.getListsFromIds(sorted.slice(0, 5));
+    this.recentLists = await this.firebase.getListsFromIds(sorted.slice(0, 10));
     const creatorPromises = this.recentLists.map((list) =>
       this.firebase.getUserById(list.creatorID),
     );

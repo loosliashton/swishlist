@@ -1,4 +1,5 @@
-<body
+<div
+  class="home-container"
   [ngClass]="{
     'christmas-body': theme === 'christmas',
     'fall-body': theme === 'fall',
@@ -117,5 +118,23 @@
         <div class="spinner"></div>
       </div>
     }
+    <div class="footer-container">
+      <p
+        class="footer-text"
+        [ngClass]="{
+          'white-text': theme === 'christmas' || theme === 'fall',
+        }"
+      >
+        Questions? Issues? Email
+        <a
+          href="mailto:ashton@swishlist.cc"
+          class="footer-link"
+          [ngClass]="{
+            'white-link': theme === 'christmas' || theme === 'fall',
+          }"
+          >ashton@swishlist.cc</a
+        >
+      </p>
+    </div>
   </div>
-</body>
+</div>

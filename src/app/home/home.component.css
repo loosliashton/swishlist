@@ -329,3 +329,43 @@
   -webkit-animation-delay: 5s, 0.5s;
   animation-delay: 5s, 0.5s;
 }
+
+.home-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.snowflakes {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.footer-container {
+  margin-top: auto;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  text-align: center;
+}
+
+.footer-text {
+  color: black;
+}
+
+.footer-text.white-text {
+  color: lightgray;
+}
+
+.footer-link {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.footer-link:hover {
+  text-decoration: underline;
+}
+
+.footer-link.white-link {
+  color: white;
+}
