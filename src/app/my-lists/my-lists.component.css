@@ -30,7 +30,6 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 15px;
 }
 
 .list-item-card {
@@ -50,6 +49,7 @@
   transition:
     transform 0.2s,
     box-shadow 0.2s;
+  margin-bottom: 15px;
 }
 
 .list-item-card:hover {

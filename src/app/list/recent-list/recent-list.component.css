@@ -8,7 +8,7 @@
     background-color 0.2s ease,
     transform 0.2s,
     box-shadow 0.2s;
-  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 .recent-list:hover {
