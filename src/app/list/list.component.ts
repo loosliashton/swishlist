@@ -16,6 +16,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subscription } from 'rxjs';
 import { RecentListsModalComponent } from './item/recent-lists-modal/recent-lists-modal.component';
 import { RecentListsModalFunctionality } from './item/recent-lists-modal/recent-lists-modal-functionality.enum';
+import { StorageService } from 'src/services/storage.service';
 
 @Component({
   selector: 'app-list',
@@ -39,6 +40,7 @@ export class ListComponent {
     public dialog: MatDialog,
     private titleService: Title,
     private snackbar: MatSnackBar,
+    private storageService: StorageService,
   ) {}
 
   async ngOnInit() {
@@ -58,7 +60,7 @@ export class ListComponent {
       // Update the page name
       this.titleService.setTitle(`${this.creator?.name}'s List`);
 
-      this.addToRecentLists(id);
+      this.storageService.addRecentList(id);
       await this.manageSpoilerSettings(id);
 
       this.loading = false;
@@ -97,21 +99,10 @@ export class ListComponent {
     }
   }
 
-  private addToRecentLists(id: string) {
-    // Save this list to local recent lists
-    let recentLists = JSON.parse(localStorage.getItem('recentLists') || '{}');
-
-    recentLists[id] = new Date();
-    localStorage.setItem('recentLists', JSON.stringify(recentLists));
-  }
-
   private async manageSpoilerSettings(id: string) {
     // Check if user has set a spoiler preference for this list
-    let spoilerChoicesMap = JSON.parse(
-      localStorage.getItem('spoilerChoices') || '{}',
-    );
-    if (spoilerChoicesMap[id] !== undefined) {
-      this.spoilers = spoilerChoicesMap[id];
+    if (this.storageService.hasSpoilerChoice(id)) {
+      this.spoilers = this.storageService.getSpoilerChoice(id)!;
     } else {
       // Check to see if the user wants spoilers
       this.spoilers = await this.openSpoilerPrompt();
@@ -273,16 +264,11 @@ export class ListComponent {
   }
 
   checkIfUserHasSavedSpoilerSetting(): boolean {
-    let spoilerChoices = localStorage.getItem('spoilerChoices');
-    let spoilerChoicesMap = spoilerChoices ? JSON.parse(spoilerChoices) : {};
-    return spoilerChoicesMap[this.list!.id!] !== undefined;
+    return this.storageService.hasSpoilerChoice(this.list!.id!);
   }
 
   resetSpoilerPreference() {
-    let spoilerChoices = localStorage.getItem('spoilerChoices');
-    let spoilerChoicesMap = spoilerChoices ? JSON.parse(spoilerChoices) : {};
-    delete spoilerChoicesMap[this.list!.id!];
-    localStorage.setItem('spoilerChoices', JSON.stringify(spoilerChoicesMap));
+    this.storageService.removeSpoilerChoice(this.list!.id!);
     // Refresh page to re-prompt for spoiler preference
     window.location.reload();
   }

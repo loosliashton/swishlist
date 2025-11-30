@@ -3,12 +3,13 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { FirebaseService } from 'src/services/firebase.service';
 import { List } from 'src/models/list';
+import { StorageService } from 'src/services/storage.service';
 
 @Component({
-    selector: 'app-save-list',
-    templateUrl: './save-list.component.html',
-    styleUrl: './save-list.component.css',
-    standalone: false
+  selector: 'app-save-list',
+  templateUrl: './save-list.component.html',
+  styleUrl: './save-list.component.css',
+  standalone: false,
 })
 export class SaveListComponent implements OnInit {
   list: List;
@@ -20,12 +21,13 @@ export class SaveListComponent implements OnInit {
     private dialogRef: MatDialogRef<SaveListComponent>,
     private snackbar: MatSnackBar,
     private firebase: FirebaseService,
+    private storageService: StorageService,
   ) {
     this.list = data.list;
   }
 
   ngOnInit(): void {
-    this.email = localStorage.getItem('lastEmail') || '';
+    this.email = this.storageService.getLastEmail() || '';
   }
 
   async saveList() {
