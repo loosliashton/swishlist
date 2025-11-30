@@ -12,6 +12,7 @@ import {
   updateDoc,
   deleteDoc,
   setDoc,
+  documentId,
 } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { User } from '../models/user';
@@ -24,33 +25,38 @@ const functions = getFunctions(app);
   providedIn: 'root',
 })
 export class FirebaseService {
+  private readonly USERS_COL = 'users';
+  private readonly LISTS_COL = 'lists';
+  private readonly SHORT_URLS_COL = 'shortUrls';
+
   constructor() {}
 
-  async getUsers(): Promise<User[]> {
-    // Get users
-    const usersCol = collection(db, 'users');
-    const userSnapshot = await getDocs(usersCol);
-    const userList = await Promise.all(
-      userSnapshot.docs.map(async (doc) => {
-        const user = doc.data() as User;
-        user.id = doc.id;
-        return user;
-      }),
-    );
-
-    return userList;
-  }
+  private creationPromises: Map<string, Promise<User | null>> = new Map();
 
   async createUserIfNeeded(email: string): Promise<User | null> {
-    let userId = await this.getUserIdByEmail(email);
-    if (!userId) {
-      userId = await this.addUser(email);
+    const normalizedEmail = email.toLowerCase().trim();
+    if (this.creationPromises.has(normalizedEmail)) {
+      return this.creationPromises.get(normalizedEmail)!;
     }
-    return await this.getUserById(userId);
+
+    const creationPromise = (async () => {
+      try {
+        let userId = await this.getUserIdByEmail(email);
+        if (userId === null) {
+          userId = await this.addUser(email);
+        }
+        return await this.getUserById(userId);
+      } finally {
+        this.creationPromises.delete(normalizedEmail);
+      }
+    })();
+
+    this.creationPromises.set(normalizedEmail, creationPromise);
+    return creationPromise;
   }
 
-  async getUserIdByEmail(email: string): Promise<string> {
-    const usersCol = collection(db, 'users');
+  private async getUserIdByEmail(email: string): Promise<string | null> {
+    const usersCol = collection(db, this.USERS_COL);
     const q = query(usersCol, where('email', '==', email.toLowerCase().trim()));
     const querySnapshot = await getDocs(q);
     if (!querySnapshot.empty) {
@@ -58,11 +64,11 @@ export class FirebaseService {
       return doc.id;
     }
 
-    return '';
+    return null;
   }
 
   async getUserById(id: string): Promise<User | null> {
-    const userDocRef = doc(db, 'users', id);
+    const userDocRef = doc(db, this.USERS_COL, id);
     const userDoc = await getDoc(userDocRef);
     if (userDoc.exists()) {
       const user = userDoc.data() as User;
@@ -73,16 +79,16 @@ export class FirebaseService {
     return null;
   }
 
-  async addUser(email: string): Promise<string> {
+  private async addUser(email: string): Promise<string> {
     let newUser: User = { email: email.toLowerCase().trim(), name: email };
-    const usersCol = collection(db, 'users');
+    const usersCol = collection(db, this.USERS_COL);
     const docRef = await addDoc(usersCol, newUser);
     return docRef.id;
   }
 
   async addList(user: User, listName: string): Promise<void> {
     let newList: List = { name: listName, creatorID: user.id!, items: [] };
-    const listsCol = collection(db, `lists`);
+    const listsCol = collection(db, this.LISTS_COL);
     const docRef = await addDoc(listsCol, newList);
     const docId = docRef.id;
 
@@ -100,7 +106,7 @@ export class FirebaseService {
   }
 
   async saveList(list: List): Promise<boolean> {
-    const listDocRef = doc(db, 'lists', list.id!);
+    const listDocRef = doc(db, this.LISTS_COL, list.id!);
     await updateDoc(listDocRef, list as any).catch((error) => {
       console.log(error);
       return false;
@@ -110,19 +116,19 @@ export class FirebaseService {
 
   async deleteList(user: User, list: List) {
     // Update the user's lists array in the database
-    const userDocRef = doc(db, 'users', user.id!);
+    const userDocRef = doc(db, this.USERS_COL, user.id!);
     await updateDoc(userDocRef, {
       lists: user.lists?.filter((id) => id !== list.id),
     });
 
     // Delete references to this list in other users' savedLists arrays
-    const usersCol = collection(db, 'users');
+    const usersCol = collection(db, this.USERS_COL);
     const q = query(usersCol, where('savedLists', 'array-contains', list.id));
     const querySnapshot = await getDocs(q);
     if (!querySnapshot.empty) {
       querySnapshot.docs.forEach(async (document) => {
         const userId = document.id;
-        const userDocRef = doc(db, 'users', userId);
+        const userDocRef = doc(db, this.USERS_COL, userId);
         await updateDoc(userDocRef, {
           savedLists: user.savedLists?.filter((id) => id !== list.id),
         });
@@ -131,17 +137,17 @@ export class FirebaseService {
 
     // Delete references to this list's short URL
     if (list.shortUrl) {
-      const shortUrlDocRef = doc(db, 'shortUrls', list.shortUrl);
+      const shortUrlDocRef = doc(db, this.SHORT_URLS_COL, list.shortUrl);
       await deleteDoc(shortUrlDocRef);
     }
 
     // Delete the list
-    const listDocRef = doc(db, 'lists', list.id!);
+    const listDocRef = doc(db, this.LISTS_COL, list.id!);
     await deleteDoc(listDocRef);
   }
 
-  async updateListShortUrl(list: List, shortUrl: string) {
-    const listDocRef = doc(db, 'lists', list.id!);
+  private async updateListShortUrl(list: List, shortUrl: string) {
+    const listDocRef = doc(db, this.LISTS_COL, list.id!);
     await updateDoc(listDocRef, {
       shortUrl: shortUrl,
     });
@@ -153,19 +159,29 @@ export class FirebaseService {
   }
 
   async getListsFromIds(listIds: string[]): Promise<List[]> {
-    const listPromises = listIds.map(async (listId) => {
-      const listDocRef = doc(db, 'lists', listId);
-      const listDoc = await getDoc(listDocRef);
-      if (listDoc.exists()) {
-        const list = listDoc.data() as List;
-        list.id = listDoc.id;
+    if (!listIds || listIds.length === 0) return [];
+
+    const chunks = [];
+    // Split the listIds into chunks of 30
+    for (let i = 0; i < listIds.length; i += 30) {
+      chunks.push(listIds.slice(i, i + 30));
+    }
+
+    const listPromises = chunks.map(async (chunk) => {
+      const q = query(
+        collection(db, this.LISTS_COL),
+        where(documentId(), 'in', chunk),
+      );
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map((doc) => {
+        const list = doc.data() as List;
+        list.id = doc.id;
         return list;
-      }
-      return null;
+      });
     });
 
-    const lists = await Promise.all(listPromises);
-    return lists.filter((list): list is List => list !== null);
+    const listsArrays = await Promise.all(listPromises);
+    return listsArrays.flat();
   }
 
   async addToSavedLists(user: User, list: List) {
@@ -188,7 +204,7 @@ export class FirebaseService {
   }
 
   async getList(listId: string): Promise<List | null> {
-    const listDocRef = doc(db, 'lists', listId);
+    const listDocRef = doc(db, this.LISTS_COL, listId);
     const listDoc = await getDoc(listDocRef);
     if (listDoc.exists()) {
       const list = listDoc.data() as List;
@@ -200,14 +216,14 @@ export class FirebaseService {
   }
 
   async changeName(id: string, name: string) {
-    const userDocRef = doc(db, 'users', id);
+    const userDocRef = doc(db, this.USERS_COL, id);
     await updateDoc(userDocRef, {
       name: name,
     });
   }
 
   async checkShortUrl(shortUrl: string): Promise<string | null> {
-    const shortUrlDocRef = doc(db, 'shortUrls', shortUrl);
+    const shortUrlDocRef = doc(db, this.SHORT_URLS_COL, shortUrl);
     const shortUrlDoc = await getDoc(shortUrlDocRef);
     if (shortUrlDoc.exists()) {
       const longUrl = shortUrlDoc.data()['listId'];
@@ -223,11 +239,11 @@ export class FirebaseService {
     let shortUrl = '';
     while (true) {
       shortUrl = Math.random().toString(36).substring(2, 5);
-      const shortUrlDocRef = doc(db, 'shortUrls', shortUrl);
+      const shortUrlDocRef = doc(db, this.SHORT_URLS_COL, shortUrl);
       const shortUrlDoc = await getDoc(shortUrlDocRef);
       if (!shortUrlDoc.exists()) break; // Unique short URL found
     }
-    await setDoc(doc(db, 'shortUrls', shortUrl), { listId: listId });
+    await setDoc(doc(db, this.SHORT_URLS_COL, shortUrl), { listId: listId });
     await this.updateListShortUrl({ id: listId } as List, shortUrl);
     return shortUrl;
   }
