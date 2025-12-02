@@ -15,8 +15,7 @@ export class HomeComponent implements OnInit {
   badEmail: boolean = false;
   email: string = '';
   theme: string = '';
-  recentLists: List[] = [];
-  recentListCreators: (User | null)[] = [];
+  recentListItems: { list: List; creator: User | null }[] = [];
   loading: boolean = false;
 
   constructor(
@@ -46,11 +45,9 @@ export class HomeComponent implements OnInit {
     if (!sortedIds.length) return;
     this.loading = true;
 
-    const { lists, creators } = await this.firebase.getListsWithCreators(
+    this.recentListItems = await this.firebase.getListsWithCreators(
       sortedIds.slice(0, 10),
     );
-    this.recentLists = lists;
-    this.recentListCreators = creators;
 
     this.loading = false;
   }
@@ -76,10 +73,8 @@ export class HomeComponent implements OnInit {
 
   removeList(list: List, event: MouseEvent) {
     if (!confirm('Remove from recent lists?')) return;
-    let index = this.recentLists.indexOf(list);
-    this.recentLists = this.recentLists.filter((l) => l.id !== list.id);
-    this.recentListCreators = this.recentListCreators.filter(
-      (_name, i) => i !== index,
+    this.recentListItems = this.recentListItems.filter(
+      (item) => item.list.id !== list.id,
     );
 
     this.storageService.removeRecentList(list.id!);

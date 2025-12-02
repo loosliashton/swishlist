@@ -47,10 +47,10 @@
         <h3>Saved Lists</h3>
       </div>
       <div class="lists">
-        @for (list of savedLists; track list; let i = $index) {
+        @for (item of savedListItems; track item.list.id) {
           <app-recent-list
-            [list]="list"
-            [creator]="savedListCreators[i]"
+            [list]="item.list"
+            [creator]="item.creator?.name || 'Unknown User'"
             [showDeleteButton]="true"
             (listClicked)="navigateToList($event)"
             (deleteClicked)="unsaveList($event.list, $event.event)"

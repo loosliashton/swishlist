@@ -92,7 +92,7 @@
       }
     </div>
     @if (!loading) {
-      @if (recentLists.length) {
+      @if (recentListItems.length) {
         <div class="lists center pad-top">
           <h3
             [ngClass]="{
@@ -101,13 +101,13 @@
           >
             Recent Lists
           </h3>
-          @for (list of recentLists; track list; let i = $index) {
+          @for (item of recentListItems; track item.list.id) {
             <app-recent-list
-              [list]="list"
-              [creator]="recentListCreators[i]?.name || 'Unknown User'"
+              [list]="item.list"
+              [creator]="item.creator?.name || 'Unknown User'"
               [showDeleteButton]="true"
               [theme]="theme"
-              (listClicked)="navigateToList($event, recentListCreators[i])"
+              (listClicked)="navigateToList($event, item.creator)"
               (deleteClicked)="removeList($event.list, $event.event)"
             ></app-recent-list>
           }

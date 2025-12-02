@@ -24,8 +24,7 @@ import { StorageService } from 'src/services/storage.service';
   styleUrl: './recent-lists-modal.component.css',
 })
 export class RecentListsModalComponent implements OnInit {
-  recentLists: List[] = [];
-  recentListCreators: (User | null)[] = [];
+  recentListItems: { list: List; creator: User | null }[] = [];
   loading: boolean = false;
   copyLoading: boolean = false;
   functionality: RecentListsModalFunctionality =
@@ -71,20 +70,17 @@ export class RecentListsModalComponent implements OnInit {
     if (!sortedIds.length) return;
     this.loading = true;
 
-    const { lists, creators } = await this.firebase.getListsWithCreators(
+    this.recentListItems = await this.firebase.getListsWithCreators(
       sortedIds.slice(0, 10),
     );
-    this.recentLists = lists;
-    this.recentListCreators = creators;
 
     if (this.functionality === RecentListsModalFunctionality.NavigateToList) {
       // Filter out the currenct list
-      const index = this.recentLists.findIndex(
-        (list) => list.id === this.currentListId,
+      const index = this.recentListItems.findIndex(
+        (item) => item.list.id === this.currentListId,
       );
       if (index !== -1) {
-        this.recentLists.splice(index, 1);
-        this.recentListCreators.splice(index, 1);
+        this.recentListItems.splice(index, 1);
       }
     }
 

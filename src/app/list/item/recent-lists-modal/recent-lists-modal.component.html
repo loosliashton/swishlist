@@ -1,13 +1,13 @@
 @if (!loading) {
-  @if (recentLists.length) {
+  @if (recentListItems.length) {
     <h3 mat-dialog-title>{{ this.title }}</h3>
     <mat-dialog-content>
       <div class="lists" [ngClass]="{ disabled: copyLoading }">
-        @for (list of recentLists; track list; let i = $index) {
+        @for (item of recentListItems; track item.list.id) {
           <app-recent-list
-            [list]="list"
-            [creator]="recentListCreators[i]?.name || 'Unknown User'"
-            (listClicked)="selectList($event, recentListCreators[i])"
+            [list]="item.list"
+            [creator]="item.creator?.name || 'Unknown User'"
+            (listClicked)="selectList(item.list, item.creator)"
           ></app-recent-list>
         }
       </div>

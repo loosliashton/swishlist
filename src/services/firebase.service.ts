@@ -181,7 +181,13 @@ export class FirebaseService {
     });
 
     const listsArrays = await Promise.all(listPromises);
-    return listsArrays.flat();
+    const allLists = listsArrays.flat();
+
+    const listMap = new Map(allLists.map((list) => [list.id!, list]));
+
+    return listIds
+      .map((id) => listMap.get(id))
+      .filter((list): list is List => list !== undefined);
   }
 
   async getUsersFromIds(userIds: string[]): Promise<User[]> {
@@ -211,17 +217,20 @@ export class FirebaseService {
 
   async getListsWithCreators(
     listIds: string[],
-  ): Promise<{ lists: List[]; creators: (User | null)[] }> {
+  ): Promise<{ list: List; creator: User | null }[]> {
     const lists = await this.getListsFromIds(listIds);
     const creatorIds = [...new Set(lists.map((list) => list.creatorID))];
     const creators = await this.getUsersFromIds(creatorIds);
     const creatorsMap = new Map(creators.map((user) => [user.id, user]));
 
-    const creatorsArray = lists.map((list) => {
-      return creatorsMap.get(list.creatorID) ?? null;
+    const listsWithCreators = lists.map((list) => {
+      return {
+        list: list,
+        creator: creatorsMap.get(list.creatorID) ?? null,
+      };
     });
 
-    return { lists, creators: creatorsArray };
+    return listsWithCreators;
   }
 
   async addToSavedLists(user: User, list: List) {
