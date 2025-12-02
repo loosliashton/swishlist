@@ -1,5 +1,5 @@
 @if (!loading) {
-  @if (recentLists.length) {
+  @if (recentListItems.length) {
     <h3 mat-dialog-title>{{ this.title }}</h3>
     <mat-dialog-content>
       <div class="lists" [ngClass]="{ disabled: copyLoading }">
