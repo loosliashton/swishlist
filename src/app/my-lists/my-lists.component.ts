@@ -16,8 +16,7 @@ import { ChangeNameComponent } from './change-name/change-name.component';
 export class MyListsComponent implements OnInit {
   email: string = '';
   lists: List[] = [];
-  savedLists: List[] = [];
-  savedListCreators: string[] = [];
+  savedListItems: { list: List; creator: User | null }[] = [];
   user: User | null | undefined;
   loading: boolean = true;
 
@@ -48,10 +47,7 @@ export class MyListsComponent implements OnInit {
     ]);
 
     this.lists = lists;
-    this.savedLists = savedListsData.map((data) => data.list);
-    this.savedListCreators = savedListsData.map(
-      (data) => data.creator?.name ?? 'Unknown',
-    );
+    this.savedListItems = savedListsData;
 
     this.loading = false;
   }
