@@ -40,7 +40,7 @@ export class MyListsComponent implements OnInit {
 
     const savedListsPromise = this.user.savedLists
       ? this.firebase.getListsWithCreators(this.user.savedLists)
-      : Promise.resolve({ lists: [], creators: [] });
+      : Promise.resolve([]);
 
     const [lists, savedListsData] = await Promise.all([
       listsPromise,
@@ -48,9 +48,9 @@ export class MyListsComponent implements OnInit {
     ]);
 
     this.lists = lists;
-    this.savedLists = savedListsData.lists;
-    this.savedListCreators = savedListsData.creators.map(
-      (user) => user?.name ?? 'Unknown',
+    this.savedLists = savedListsData.map((data) => data.list);
+    this.savedListCreators = savedListsData.map(
+      (data) => data.creator?.name ?? 'Unknown',
     );
 
     this.loading = false;
