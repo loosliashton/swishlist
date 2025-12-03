@@ -8,6 +8,10 @@
   color: white;
 }
 
+.white-logo {
+  filter: invert(1);
+}
+
 .buttons {
   margin-top: 10px;
 }

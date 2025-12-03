@@ -51,7 +51,14 @@
           }"
           class="center pad-top"
         >
-          Swishlist
+          <img
+            src="assets/images/swishlist.svg"
+            alt="Swishlist"
+            style="height: 3rem"
+            [ngClass]="{
+              'white-logo': theme === 'christmas' || theme === 'fall',
+            }"
+          />
         </h1>
         <p
           [ngClass]="{
