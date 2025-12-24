@@ -163,20 +163,26 @@
       </div>
     }
 
-    @if (!spoilers && !editing) {
-      <div class="combined-actions">
-        <button class="action-bar-btn" (click)="openAddModal()">
-          <i class="fa-solid fa-plus fa-lg"></i>
-          <span>Add Item</span>
-        </button>
-        @if (list?.items?.length) {
-          <div class="action-divider"></div>
-          <button class="action-bar-btn" (click)="openSuggestionModal()">
-            <i class="fa-solid fa-wand-magic-sparkles fa-lg"></i>
-            <span>Suggestions</span>
-          </button>
-        }
-      </div>
+    @if (controlsToShow(); as controls) {
+      @if (controls.length) {
+        <div class="combined-actions">
+          @if (controls.includes("add")) {
+            <button class="action-bar-btn" (click)="openAddModal()">
+              <i class="fa-solid fa-plus fa-lg"></i>
+              <span>Add Item</span>
+            </button>
+          }
+          @if (controls.length > 1) {
+            <div class="action-divider"></div>
+          }
+          @if (controls.includes("suggestions")) {
+            <button class="action-bar-btn" (click)="openSuggestionModal()">
+              <i class="fa-solid fa-wand-magic-sparkles fa-lg"></i>
+              <span>Suggestions</span>
+            </button>
+          }
+        </div>
+      }
     }
   </div>
 }

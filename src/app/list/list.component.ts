@@ -282,4 +282,15 @@ export class ListComponent {
       width: '600px',
     });
   }
+
+  controlsToShow(): string[] {
+    const controls: string[] = [];
+    if (!this.editing && !this.spoilers) {
+      controls.push('add');
+    }
+    if (this.list?.items?.length) {
+      controls.push('suggestions');
+    }
+    return controls;
+  }
 }
