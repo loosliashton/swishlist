@@ -65,7 +65,7 @@ exports.getAmazonLinks = functions.https.onCall(
     // Preserve any existing affiliate tags
     let affiliateUrl = data.url.includes('tag=')
       ? null
-      : `http://www.amazon.com/dp/${result.ASIN}/ref=nosim?tag=${storeId}`;
+      : `https://www.amazon.com/dp/${result.ASIN}/ref=nosim?tag=${storeId}`;
     return {
       keepaUrl,
       affiliateUrl,

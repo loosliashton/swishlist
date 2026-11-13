@@ -259,6 +259,9 @@ export class ListComponent implements OnInit, OnDestroy {
         if (this.isOwner) {
           this.spoilers = false;
           this.userHasSavedSetting = false;
+          this.snackbar.open('Signed in — this is your list', 'Close', {
+            duration: 3000,
+          });
           return;
         }
       }

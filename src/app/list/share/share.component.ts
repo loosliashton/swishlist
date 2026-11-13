@@ -29,7 +29,7 @@ export class ShareComponent {
     this.firebase
       .createAndAddShortUrl(this.list)
       .then((url) => {
-        this.shareUrl = `http://swishlist.cc/${url}`;
+        this.shareUrl = `https://swishlist.cc/${url}`;
         this.loading = false;
         // If share API is available, prompt share dialog
         if (navigator.share) {
@@ -44,7 +44,7 @@ export class ShareComponent {
       })
       .catch((error) => {
         console.error('Error creating short URL:', error);
-        this.shareUrl = `http://swishlist.cc/list/${this.list.id}`;
+        this.shareUrl = `https://swishlist.cc/list/${this.list.id}`;
         this.loading = false;
       });
   }

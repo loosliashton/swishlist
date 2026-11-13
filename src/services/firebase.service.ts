@@ -104,26 +104,33 @@ export class FirebaseService {
     const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth, provider);
     const user = await this.resolveOrCreateUserForAuth(result.user);
-    this.currentUserSubject.next(user);
+    this.ngZone.run(() => this.currentUserSubject.next(user));
     return user;
   }
 
   async signOutUser(): Promise<void> {
     await signOut(auth);
-    this.currentUserSubject.next(null);
+    this.ngZone.run(() => this.currentUserSubject.next(null));
   }
 
   async refreshCurrentUser(): Promise<User | null> {
     const current = this.currentUserSubject.value;
     if (!current?.id) return null;
     const fresh = await this.getUserById(current.id);
-    this.currentUserSubject.next(fresh);
+    this.ngZone.run(() => this.currentUserSubject.next(fresh));
     return fresh;
+  }
+
+  private cloneList(list: List): List {
+    return {
+      ...list,
+      ...(list.items ? { items: list.items.map((item) => ({ ...item })) } : {}),
+    };
   }
 
   cacheList(list: List | null | undefined): void {
     if (list?.id) {
-      this.listCache.set(list.id, { ...list });
+      this.listCache.set(list.id, this.cloneList(list));
     }
   }
 
@@ -144,7 +151,7 @@ export class FirebaseService {
     for (const id of listIds) {
       const cached = this.listCache.get(id);
       if (!cached) return null;
-      result.push(cached);
+      result.push(this.cloneList(cached));
     }
     return result;
   }
