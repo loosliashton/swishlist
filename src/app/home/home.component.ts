@@ -1,4 +1,12 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  TemplateRef,
+  ViewChild,
+} from '@angular/core';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -20,6 +28,7 @@ type HomeTab = 'my' | 'saved' | 'recent';
 })
 export class HomeComponent implements OnInit, OnDestroy {
   @ViewChild('columnsContainer') columnsContainer?: ElementRef<HTMLElement>;
+  @ViewChild('helpDialog') helpDialog?: TemplateRef<unknown>;
 
   theme: string = '';
   activeTab: HomeTab = 'my';
@@ -44,6 +53,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     private storageService: StorageService,
     private snackbar: MatSnackBar,
     private dialog: MatDialog,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   async ngOnInit() {
@@ -56,9 +66,12 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.theme = 'fall';
     }
 
+    this.applyDocumentTheme(this.theme);
+
     this.subscriptions.push(
       this.firebase.authReady$.subscribe((ready) => {
         this.authReady = ready;
+        this.cdr.detectChanges();
       }),
       this.firebase.currentUser$.subscribe((user) => {
         const wasSignedOut = !this.currentUser;
@@ -75,8 +88,33 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.applyDocumentTheme('');
     this.cancelScrollAnimation();
     this.subscriptions.forEach((sub) => sub.unsubscribe());
+  }
+
+  private applyDocumentTheme(theme: string) {
+    const classes = ['christmas-theme', 'fall-theme'];
+    document.documentElement.classList.remove(...classes);
+    document.body.classList.remove(...classes);
+
+    let meta = document.querySelector('meta[name="theme-color"]');
+    if (theme === 'christmas' || theme === 'fall') {
+      const cls = `${theme}-theme`;
+      document.documentElement.classList.add(cls);
+      document.body.classList.add(cls);
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.setAttribute('name', 'theme-color');
+        document.head.appendChild(meta);
+      }
+      meta.setAttribute(
+        'content',
+        theme === 'christmas' ? '#180036' : '#2e1a0f',
+      );
+    } else if (meta) {
+      meta.remove();
+    }
   }
 
   cancelScrollAnimation() {
@@ -191,6 +229,11 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
   }
 
+  openHelp() {
+    if (!this.helpDialog) return;
+    this.dialog.open(this.helpDialog);
+  }
+
   isGiftList(list: List): boolean {
     return (list.type ?? 'gift') === 'gift';
   }
@@ -200,10 +243,25 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.myLists = [];
       this.savedListItems = [];
       this.userListsLoading = false;
+      this.cdr.detectChanges();
       return;
     }
 
-    this.userListsLoading = true;
+    const cachedMyLists = this.firebase.getCachedLists(user, false);
+    const cachedSavedLists = this.firebase.getCachedListsWithCreators(
+      user.savedLists ?? [],
+    );
+
+    if (cachedMyLists && cachedSavedLists) {
+      this.myLists = cachedMyLists;
+      this.savedListItems = cachedSavedLists;
+      this.userListsLoading = false;
+      this.cdr.detectChanges();
+    } else {
+      this.userListsLoading = true;
+      this.cdr.detectChanges();
+    }
+
     try {
       const [lists, savedListsData] = await Promise.all([
         user.lists?.length
@@ -215,8 +273,11 @@ export class HomeComponent implements OnInit, OnDestroy {
       ]);
       this.myLists = lists;
       this.savedListItems = savedListsData;
+    } catch (error) {
+      console.error('Error loading user lists:', error);
     } finally {
       this.userListsLoading = false;
+      this.cdr.detectChanges();
     }
   }
 
@@ -225,16 +286,28 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (!sortedIds.length) {
       this.recentListItems = [];
       this.loading = false;
+      this.cdr.detectChanges();
       return;
     }
 
-    this.loading = true;
+    const topIds = sortedIds.slice(0, 10);
+    const cachedRecent = this.firebase.getCachedListsWithCreators(topIds);
+    if (cachedRecent) {
+      this.recentListItems = cachedRecent;
+      this.loading = false;
+      this.cdr.detectChanges();
+    } else {
+      this.loading = true;
+      this.cdr.detectChanges();
+    }
+
     try {
-      this.recentListItems = await this.firebase.getListsWithCreators(
-        sortedIds.slice(0, 10),
-      );
+      this.recentListItems = await this.firebase.getListsWithCreators(topIds);
+    } catch (error) {
+      console.error('Error loading recent lists:', error);
     } finally {
       this.loading = false;
+      this.cdr.detectChanges();
     }
   }
 

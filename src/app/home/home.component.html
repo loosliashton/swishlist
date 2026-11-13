@@ -70,43 +70,57 @@
             Loading account...
           </p>
         } @else if (currentUser) {
-          <div class="user-greeting center">
-            <span
-              class="greeting-text"
-              [ngClass]="{
-                'white-title': theme === 'christmas' || theme === 'fall',
-              }"
-            >
-              Welcome, {{ currentUser.name }}
-            </span>
-            <button
-              type="button"
-              class="edit-name-btn"
-              title="Change display name"
-              [ngClass]="{
-                'white-link': theme === 'christmas' || theme === 'fall',
-              }"
-              (click)="changeName()"
-            >
-              <i class="fa-solid fa-pen fa-xs"></i>
-            </button>
-            <span
-              class="greeting-sep"
-              [ngClass]="{
-                'white-title': theme === 'christmas' || theme === 'fall',
-              }"
-              >·</span
-            >
-            <button
-              type="button"
-              class="sign-out-link"
-              [ngClass]="{
-                'white-link': theme === 'christmas' || theme === 'fall',
-              }"
-              (click)="signOut()"
-            >
-              Sign out
-            </button>
+          <div class="user-greeting">
+            <div class="greeting-name-row center">
+              <span
+                class="greeting-text"
+                [ngClass]="{
+                  'white-title': theme === 'christmas' || theme === 'fall',
+                }"
+              >
+                Welcome, {{ currentUser.name }}
+              </span>
+              <button
+                type="button"
+                class="edit-name-btn"
+                title="Change display name"
+                [ngClass]="{
+                  'white-link': theme === 'christmas' || theme === 'fall',
+                }"
+                (click)="changeName()"
+              >
+                <i class="fa-solid fa-pen fa-xs"></i>
+              </button>
+            </div>
+            <div class="greeting-actions-row center">
+              <button
+                type="button"
+                class="sign-out-link"
+                [ngClass]="{
+                  'white-link': theme === 'christmas' || theme === 'fall',
+                }"
+                (click)="signOut()"
+              >
+                Sign out
+              </button>
+              <span
+                class="greeting-sep"
+                [ngClass]="{
+                  'white-title': theme === 'christmas' || theme === 'fall',
+                }"
+                >·</span
+              >
+              <button
+                type="button"
+                class="sign-out-link"
+                [ngClass]="{
+                  'white-link': theme === 'christmas' || theme === 'fall',
+                }"
+                (click)="openHelp()"
+              >
+                Help
+              </button>
+            </div>
           </div>
         } @else {
           <p
@@ -132,6 +146,16 @@
               <span>{{
                 signingIn ? "Signing in..." : "Sign in with Google"
               }}</span>
+            </button>
+            <button
+              type="button"
+              class="sign-out-link"
+              [ngClass]="{
+                'white-link': theme === 'christmas' || theme === 'fall',
+              }"
+              (click)="openHelp()"
+            >
+              Help
             </button>
           </div>
         }
@@ -340,23 +364,20 @@
       }
     }
 
-    <div class="footer-container">
-      <p
-        class="footer-text"
-        [ngClass]="{
-          'white-text': theme === 'christmas' || theme === 'fall',
-        }"
-      >
-        Questions? Issues? Email
-        <a
-          href="mailto:ashton@swishlist.cc"
-          class="footer-link"
-          [ngClass]="{
-            'white-link': theme === 'christmas' || theme === 'fall',
-          }"
-          >ashton@swishlist.cc</a
-        >
-      </p>
-    </div>
   </div>
 </div>
+
+<ng-template #helpDialog>
+  <h2 mat-dialog-title>Help</h2>
+  <mat-dialog-content>
+    <p class="help-dialog-text">
+      Questions or issues? Email
+      <a href="mailto:ashton@swishlist.cc" class="footer-link"
+        >ashton@swishlist.cc</a
+      >
+    </p>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close>Close</button>
+  </mat-dialog-actions>
+</ng-template>

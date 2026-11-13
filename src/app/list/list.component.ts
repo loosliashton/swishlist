@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FirebaseService } from '../../services/firebase.service';
 import { List, ListType } from '../../models/list';
@@ -43,6 +43,7 @@ export class ListComponent implements OnInit, OnDestroy {
     private titleService: Title,
     private snackbar: MatSnackBar,
     private storageService: StorageService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   get isOwner(): boolean {
@@ -68,6 +69,7 @@ export class ListComponent implements OnInit, OnDestroy {
           this.spoilers = false;
           this.userHasSavedSetting = false;
         }
+        this.cdr.detectChanges();
       }),
       this.route.paramMap.subscribe(async (params) => {
         this.loading = true;
@@ -83,6 +85,7 @@ export class ListComponent implements OnInit, OnDestroy {
         ]);
         if (!this.list) {
           this.loading = false;
+          this.cdr.detectChanges();
           return;
         }
 
@@ -96,6 +99,7 @@ export class ListComponent implements OnInit, OnDestroy {
         await this.manageSpoilerSettings(id);
 
         this.loading = false;
+        this.cdr.detectChanges();
       }),
     );
   }
@@ -105,10 +109,11 @@ export class ListComponent implements OnInit, OnDestroy {
   }
 
   private initializeFromState(): { passedList: List; passedUser: User } {
-    const passedList: List = history.state.list;
-    const passedUser: User = history.state.user;
+    const passedList: List = history.state?.list;
+    const passedUser: User = history.state?.user;
     // Consume navigation state to force fetching data on reload
-    history.replaceState({}, '');
+    const { list: _list, user: _user, ...restState } = history.state || {};
+    history.replaceState(restState, '');
     return { passedList, passedUser };
   }
 
@@ -117,6 +122,7 @@ export class ListComponent implements OnInit, OnDestroy {
     // Otherwise, fetch the list from Firebase.
     if (passedList && passedList.id === id) {
       this.list = passedList;
+      this.firebase.cacheList(this.list);
     } else {
       await this.getList(id);
     }
@@ -127,6 +133,7 @@ export class ListComponent implements OnInit, OnDestroy {
     // Cache-First: Use passed user if available and valid to avoid DB call
     if (passedUser && passedUser.id === this.list!.creatorID) {
       this.creator = passedUser;
+      this.firebase.cacheUser(this.creator);
     } else {
       // Only fetch if we don't have valid passed user data
       await this.firebase.getUserById(this.list!.creatorID).then((creator) => {

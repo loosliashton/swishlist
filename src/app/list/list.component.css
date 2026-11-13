@@ -170,6 +170,7 @@
 .action-bar-btn {
   background: none;
   border: none;
+  color: black;
   padding: 12px 24px;
   border-radius: 30px;
   display: flex;

@@ -1,10 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { app } from 'src/environments/environment';
 import {
   collection,
   getDoc,
   getDocs,
   getFirestore,
+  initializeFirestore,
   addDoc,
   query,
   where,
@@ -28,7 +29,14 @@ import { User } from '../models/user';
 import { List, ListType } from '../models/list';
 import { Item } from '../models/item';
 
-const db = getFirestore(app);
+let db: ReturnType<typeof getFirestore>;
+try {
+  db = initializeFirestore(app, {
+    experimentalAutoDetectLongPolling: true,
+  });
+} catch {
+  db = getFirestore(app);
+}
 const auth = getAuth(app);
 const functions = getFunctions(app);
 
@@ -47,22 +55,24 @@ export class FirebaseService {
   authReady$ = this.authReadySubject.asObservable();
 
   private authResolutionPromises: Map<string, Promise<User | null>> = new Map();
+  private listCache = new Map<string, List>();
+  private userCache = new Map<string, User>();
 
-  constructor() {
+  constructor(private ngZone: NgZone) {
     onAuthStateChanged(auth, async (authUser) => {
       try {
         if (authUser) {
           const user = await this.resolveOrCreateUserForAuth(authUser);
-          this.currentUserSubject.next(user);
+          this.ngZone.run(() => this.currentUserSubject.next(user));
         } else {
-          this.currentUserSubject.next(null);
+          this.ngZone.run(() => this.currentUserSubject.next(null));
         }
       } catch (error) {
         console.error('Error resolving authenticated user:', error);
-        this.currentUserSubject.next(null);
+        this.ngZone.run(() => this.currentUserSubject.next(null));
       } finally {
         if (!this.authReadySubject.value) {
-          this.authReadySubject.next(true);
+          this.ngZone.run(() => this.authReadySubject.next(true));
         }
       }
     });
@@ -111,10 +121,59 @@ export class FirebaseService {
     return fresh;
   }
 
+  cacheList(list: List | null | undefined): void {
+    if (list?.id) {
+      this.listCache.set(list.id, { ...list });
+    }
+  }
+
+  cacheUser(user: User | null | undefined): void {
+    if (user?.id) {
+      this.userCache.set(user.id, { ...user });
+    }
+  }
+
+  getCachedLists(user: User, saved: boolean): List[] | null {
+    const listIds = (saved ? user.savedLists : user.lists) ?? [];
+    return this.getCachedListsFromIds(listIds);
+  }
+
+  getCachedListsFromIds(listIds: string[]): List[] | null {
+    if (!listIds || listIds.length === 0) return [];
+    const result: List[] = [];
+    for (const id of listIds) {
+      const cached = this.listCache.get(id);
+      if (!cached) return null;
+      result.push(cached);
+    }
+    return result;
+  }
+
+  getCachedListsWithCreators(
+    listIds: string[],
+  ): { list: List; creator: User | null }[] | null {
+    if (!listIds || listIds.length === 0) return [];
+    const lists = this.getCachedListsFromIds(listIds);
+    if (!lists) return null;
+    const result: { list: List; creator: User | null }[] = [];
+    for (const list of lists) {
+      const creator = this.userCache.get(list.creatorID) ?? null;
+      if (!creator) return null;
+      result.push({ list, creator });
+    }
+    return result;
+  }
+
   private patchCurrentUser(userId: string, patch: Partial<User>): void {
+    const existing = this.userCache.get(userId);
+    if (existing) {
+      this.cacheUser({ ...existing, ...patch });
+    }
     const current = this.currentUserSubject.value;
     if (current && current.id === userId) {
-      this.currentUserSubject.next({ ...current, ...patch });
+      const updated = { ...current, ...patch };
+      this.cacheUser(updated);
+      this.ngZone.run(() => this.currentUserSubject.next(updated));
     }
   }
 
@@ -160,9 +219,10 @@ export class FirebaseService {
             await updateDoc(userDocRef, updates);
             user = { ...user, ...updates };
           }
+          this.cacheUser(user);
 
           if (user.lists?.length) {
-            await this.backfillCreatorUidOnLists(user.lists, authUser.uid);
+            void this.backfillCreatorUidOnLists(user.lists, authUser.uid);
           }
 
           return user;
@@ -178,7 +238,9 @@ export class FirebaseService {
           savedLists: [],
         };
         const docRef = await addDoc(collection(db, this.USERS_COL), newUser);
-        return { ...newUser, id: docRef.id };
+        const createdUser = { ...newUser, id: docRef.id };
+        this.cacheUser(createdUser);
+        return createdUser;
       } finally {
         this.authResolutionPromises.delete(authUser.uid);
       }
@@ -196,9 +258,10 @@ export class FirebaseService {
       const lists = await this.getListsFromIds(listIds);
       const missing = lists.filter((l) => l.id && !l.creatorUid);
       await Promise.all(
-        missing.map((l) =>
-          updateDoc(doc(db, this.LISTS_COL, l.id!), { creatorUid }),
-        ),
+        missing.map(async (l) => {
+          await updateDoc(doc(db, this.LISTS_COL, l.id!), { creatorUid });
+          this.cacheList({ ...l, creatorUid });
+        }),
       );
     } catch (error) {
       console.error('Error backfilling creatorUid on lists:', error);
@@ -215,6 +278,7 @@ export class FirebaseService {
       const userDoc = snapshot.docs[0];
       const user = userDoc.data() as User;
       user.id = userDoc.id;
+      this.cacheUser(user);
       return user;
     }
     return null;
@@ -232,6 +296,7 @@ export class FirebaseService {
       const userDoc = snapshot.docs[0];
       const user = userDoc.data() as User;
       user.id = userDoc.id;
+      this.cacheUser(user);
       return user;
     }
     return null;
@@ -247,6 +312,7 @@ export class FirebaseService {
       const userDoc = snapshot.docs[0];
       const user = userDoc.data() as User;
       user.id = userDoc.id;
+      this.cacheUser(user);
       return user;
     }
     return null;
@@ -258,6 +324,7 @@ export class FirebaseService {
     if (userDoc.exists()) {
       const user = userDoc.data() as User;
       user.id = userDoc.id;
+      this.cacheUser(user);
       return user;
     }
 
@@ -293,6 +360,7 @@ export class FirebaseService {
     newList.id = docId;
     newList.shortUrl = shortUrl;
     await this.updateListShortUrl(newList, shortUrl);
+    this.cacheList(newList);
     this.patchCurrentUser(user.id!, { lists: updatedLists });
   }
 
@@ -308,6 +376,7 @@ export class FirebaseService {
       const listDocRef = doc(db, this.LISTS_COL, list.id!);
       const { id, ...listData } = list;
       await updateDoc(listDocRef, listData as any);
+      this.cacheList(list);
       return true;
     } catch (error) {
       console.error('Error saving list:', error);
@@ -319,6 +388,10 @@ export class FirebaseService {
     try {
       const listDocRef = doc(db, this.LISTS_COL, listId);
       await updateDoc(listDocRef, { items });
+      const cached = this.listCache.get(listId);
+      if (cached) {
+        this.cacheList({ ...cached, items });
+      }
       return true;
     } catch (error) {
       console.error('Error updating list items:', error);
@@ -361,6 +434,9 @@ export class FirebaseService {
     // Delete the list
     const listDocRef = doc(db, this.LISTS_COL, list.id!);
     await deleteDoc(listDocRef);
+    if (list.id) {
+      this.listCache.delete(list.id);
+    }
   }
 
   private async updateListShortUrl(list: List, shortUrl: string) {
@@ -393,6 +469,7 @@ export class FirebaseService {
       return querySnapshot.docs.map((doc) => {
         const list = doc.data() as List;
         list.id = doc.id;
+        this.cacheList(list);
         return list;
       });
     });
@@ -424,6 +501,7 @@ export class FirebaseService {
       return querySnapshot.docs.map((doc) => {
         const user = doc.data() as User;
         user.id = doc.id;
+        this.cacheUser(user);
         return user;
       });
     });
@@ -479,6 +557,7 @@ export class FirebaseService {
     if (listDoc.exists()) {
       const list = listDoc.data() as List;
       list.id = listDoc.id;
+      this.cacheList(list);
       return list;
     }
 
@@ -517,6 +596,12 @@ export class FirebaseService {
     await setDoc(doc(db, this.SHORT_URLS_COL, shortUrl), { listId: listId });
     await this.updateListShortUrl({ id: listId } as List, shortUrl);
     list.shortUrl = shortUrl;
+    const cached = this.listCache.get(listId);
+    if (cached) {
+      this.cacheList({ ...cached, shortUrl });
+    } else if (list.creatorID && list.name) {
+      this.cacheList({ ...list, id: listId, shortUrl });
+    }
     return shortUrl;
   }
 
