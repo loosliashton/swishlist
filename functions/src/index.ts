@@ -10,7 +10,7 @@ const apiKey = functions.config().gemini.key;
 const gemini = new GoogleGenerativeAI(apiKey);
 
 const model = gemini.getGenerativeModel({
-  model: 'gemini-2.5-flash-lite',
+  model: 'gemini-3.5-flash-lite',
 });
 
 const generationConfig = {
@@ -58,7 +58,7 @@ const amazonAsin = require('amazon-asin');
 
 exports.getAmazonLinks = functions.https.onCall(
   async (data: { url: string }, context: any) => {
-    const storeId = 'swishlist00-20';
+    const storeId = 'swishlist0c-20';
     const result = await amazonAsin.asyncParseAsin(data.url);
     if (!result.ASIN) return { keepaUrl: '', affiliateUrl: data.url };
     let keepaUrl = `https://keepa.com/#!search/1-${result.ASIN}`;
@@ -70,14 +70,5 @@ exports.getAmazonLinks = functions.https.onCall(
       keepaUrl,
       affiliateUrl,
     };
-  },
-);
-
-// Legacy function for compatibility with old code
-exports.getCamelLink = functions.https.onCall(
-  async (data: { url: string }, context: any) => {
-    const result = await amazonAsin.asyncParseAsin(data.url);
-    if (!result.ASIN) return '';
-    return `https://keepa.com/#!search/1-${result.ASIN}`;
   },
 );
