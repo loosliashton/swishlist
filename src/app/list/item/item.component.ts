@@ -18,6 +18,8 @@ import { RecentListsModalFunctionality } from './recent-lists-modal/recent-lists
 export class ItemComponent {
   item: Item;
   spoilers: boolean;
+  isGeneralList: boolean = false;
+  isOwner: boolean = false;
   @Output() copiedListEvent = new EventEmitter<string>();
 
   constructor(
@@ -26,7 +28,9 @@ export class ItemComponent {
     public dialog: MatDialog,
   ) {
     this.item = data.item;
-    this.spoilers = data.spoilers;
+    this.spoilers = !!data.spoilers;
+    this.isGeneralList = !!data.isGeneralList;
+    this.isOwner = !!data.isOwner;
   }
 
   togglePurchase() {

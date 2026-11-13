@@ -1,18 +1,27 @@
-<h2 mat-dialog-title>Are you the creator of this list?</h2>
-<mat-dialog-content>
-  <p>Click "No" to see details about what has been purchased!</p>
-  <mat-checkbox [(ngModel)]="rememberChoice">Remember choice for this list</mat-checkbox>
-</mat-dialog-content>
-<mat-dialog-actions align="end">
-  <button mat-button mat-dialog-close (click)="onSelect(true)">
-    No (Show Spoilers)
-  </button>
-  <button
-    mat-button
-    [mat-dialog-close]="true"
-    class="yes-button"
-    (click)="onSelect(false)"
-  >
-    Yes
-  </button>
-</mat-dialog-actions>
+@if (isAuthenticatedNonOwner) {
+  <h2 mat-dialog-title>Show spoilers for this list?</h2>
+  <mat-dialog-content>
+    <p>Would you like to see which items have already been purchased?</p>
+    <mat-checkbox [(ngModel)]="rememberChoice">
+      Remember my choice for this list
+    </mat-checkbox>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onSelect(false)">Hide Spoilers</button>
+    <button mat-button class="yes-button" (click)="onSelect(true)">
+      Show Spoilers
+    </button>
+  </mat-dialog-actions>
+} @else {
+  <h2 mat-dialog-title>Are you the creator of this list?</h2>
+  <mat-dialog-content>
+    <p>Click "No" to see details about what has been purchased!</p>
+    <mat-checkbox [(ngModel)]="rememberChoice">
+      Remember my choice for this list
+    </mat-checkbox>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onSelect(true)">No (Show Spoilers)</button>
+    <button mat-button class="yes-button" (click)="onSelect(false)">Yes</button>
+  </mat-dialog-actions>
+}

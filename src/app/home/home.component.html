@@ -60,46 +60,258 @@
             }"
           />
         </h1>
-        <p
+        @if (!authReady) {
+          <p
+            [ngClass]="{
+              'explain-text': theme !== 'christmas' && theme !== 'fall',
+              'explain-text-christmas': theme === 'christmas' || theme === 'fall',
+            }"
+          >
+            Loading account...
+          </p>
+        } @else if (currentUser) {
+          <div class="user-greeting center">
+            <span
+              class="greeting-text"
+              [ngClass]="{
+                'white-title': theme === 'christmas' || theme === 'fall',
+              }"
+            >
+              Welcome, {{ currentUser.name }}
+            </span>
+            <button
+              type="button"
+              class="edit-name-btn"
+              title="Change display name"
+              [ngClass]="{
+                'white-link': theme === 'christmas' || theme === 'fall',
+              }"
+              (click)="changeName()"
+            >
+              <i class="fa-solid fa-pen fa-xs"></i>
+            </button>
+            <span
+              class="greeting-sep"
+              [ngClass]="{
+                'white-title': theme === 'christmas' || theme === 'fall',
+              }"
+              >·</span
+            >
+            <button
+              type="button"
+              class="sign-out-link"
+              [ngClass]="{
+                'white-link': theme === 'christmas' || theme === 'fall',
+              }"
+              (click)="signOut()"
+            >
+              Sign out
+            </button>
+          </div>
+        } @else {
+          <p
+            [ngClass]="{
+              'explain-text': theme !== 'christmas' && theme !== 'fall',
+              'explain-text-christmas': theme === 'christmas' || theme === 'fall',
+            }"
+          >
+            Sign in to view your lists or create a new one.
+          </p>
+          <div class="center auth-actions">
+            <button
+              type="button"
+              class="auth-btn blue-clickable"
+              [ngClass]="{
+                christmas: theme === 'christmas',
+                fall: theme === 'fall',
+              }"
+              [disabled]="signingIn"
+              (click)="signIn()"
+            >
+              <i class="fa-brands fa-google"></i>
+              <span>{{
+                signingIn ? "Signing in..." : "Sign in with Google"
+              }}</span>
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+
+    @if (!authReady) {
+      <div class="loading center pad-top">
+        <div class="spinner"></div>
+      </div>
+    } @else if (currentUser) {
+    <div class="tabs-bar">
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab === 'my'"
+        [ngClass]="{ christmas: theme === 'christmas', fall: theme === 'fall' }"
+        (click)="setActiveTab('my')"
+      >
+        My Lists
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab === 'saved'"
+        [ngClass]="{ christmas: theme === 'christmas', fall: theme === 'fall' }"
+        (click)="setActiveTab('saved')"
+      >
+        Saved Lists
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab === 'recent'"
+        [ngClass]="{ christmas: theme === 'christmas', fall: theme === 'fall' }"
+        (click)="setActiveTab('recent')"
+      >
+        Recent Lists
+      </button>
+    </div>
+
+    <div class="dashboard-columns">
+      <section
+        class="dashboard-column"
+        [class.mobile-hidden]="activeTab !== 'my'"
+      >
+        <h3
+          class="column-title"
           [ngClass]="{
-            'explain-text': theme !== 'christmas' && theme !== 'fall',
-            'explain-text-christmas': theme === 'christmas' || theme === 'fall',
+            'white-title': theme === 'christmas' || theme === 'fall',
           }"
         >
-          Enter your email to view your lists or create a new one.
-        </p>
-      </div>
-      <form class="form center">
-        <div class="row-layout">
-          <input
-            #emailInput
-            type="email"
-            class="form-control rounded-input"
-            placeholder="Enter email"
-            [(ngModel)]="email"
-            name="email"
-            (focus)="emailInput.select()"
-          />
-          <button
-            class="submit-button blue-clickable"
-            [ngClass]="{
-              christmas: theme === 'christmas',
-              fall: theme === 'fall',
-            }"
-            (click)="goToMyLists(email)"
-          >
-            <i class="fa-solid fa-gift black-icon"></i>
-          </button>
-        </div>
-      </form>
-      @if (badEmail) {
-        <p class="center" style="color: gray; padding-top: 10px">
-          Please enter a valid email address.
-        </p>
-      }
+          My Lists
+        </h3>
+        @if (userListsLoading) {
+          <div class="loading center pad-top">
+            <div class="spinner"></div>
+          </div>
+        } @else {
+          @for (list of myLists; track list.id) {
+            <app-recent-list
+              [list]="list"
+              [creator]="isGiftList(list) ? 'Gift List' : 'General List'"
+              [showDeleteButton]="true"
+              [deleteIcon]="'trash'"
+              [theme]="theme"
+              (listClicked)="navigateToList($event, currentUser)"
+              (deleteClicked)="deleteMyList($event.list, $event.event)"
+            ></app-recent-list>
+          } @empty {
+            <p
+              class="empty-column-text"
+              [ngClass]="{
+                'white-text': theme === 'christmas' || theme === 'fall',
+              }"
+            >
+              No lists created yet.
+            </p>
+          }
+          <div class="center add-list-container">
+            <button
+              type="button"
+              class="add-list-btn blue-clickable"
+              [ngClass]="{
+                christmas: theme === 'christmas',
+                fall: theme === 'fall',
+              }"
+              (click)="addList()"
+            >
+              <i class="fa-solid fa-plus"></i>
+              <span>Add List</span>
+            </button>
+          </div>
+        }
+      </section>
+
+      <section
+        class="dashboard-column"
+        [class.mobile-hidden]="activeTab !== 'saved'"
+      >
+        <h3
+          class="column-title"
+          [ngClass]="{
+            'white-title': theme === 'christmas' || theme === 'fall',
+          }"
+        >
+          Saved Lists
+        </h3>
+        @if (userListsLoading) {
+          <div class="loading center pad-top">
+            <div class="spinner"></div>
+          </div>
+        } @else {
+          @for (item of savedListItems; track item.list.id) {
+            <app-recent-list
+              [list]="item.list"
+              [creator]="item.creator?.name || 'Unknown User'"
+              [showDeleteButton]="true"
+              [theme]="theme"
+              (listClicked)="navigateToList($event, item.creator)"
+              (deleteClicked)="unsaveList($event.list, $event.event)"
+            ></app-recent-list>
+          } @empty {
+            <p
+              class="empty-column-text"
+              [ngClass]="{
+                'white-text': theme === 'christmas' || theme === 'fall',
+              }"
+            >
+              No saved lists yet.
+            </p>
+          }
+        }
+      </section>
+
+      <section
+        class="dashboard-column"
+        [class.mobile-hidden]="activeTab !== 'recent'"
+      >
+        <h3
+          class="column-title"
+          [ngClass]="{
+            'white-title': theme === 'christmas' || theme === 'fall',
+          }"
+        >
+          Recent Lists
+        </h3>
+        @if (loading) {
+          <div class="loading center pad-top">
+            <div class="spinner"></div>
+          </div>
+        } @else {
+          @for (item of recentListItems; track item.list.id) {
+            <app-recent-list
+              [list]="item.list"
+              [creator]="item.creator?.name || 'Unknown User'"
+              [showDeleteButton]="true"
+              [theme]="theme"
+              (listClicked)="navigateToList($event, item.creator)"
+              (deleteClicked)="removeList($event.list, $event.event)"
+            ></app-recent-list>
+          } @empty {
+            <p
+              class="empty-column-text"
+              [ngClass]="{
+                'white-text': theme === 'christmas' || theme === 'fall',
+              }"
+            >
+              No recently viewed lists.
+            </p>
+          }
+        }
+      </section>
     </div>
-    @if (!loading) {
-      @if (recentListItems.length) {
+    } @else {
+      @if (loading) {
+        <div class="loading center pad-top">
+          <div class="spinner"></div>
+        </div>
+      } @else if (recentListItems.length) {
         <div class="lists center pad-top">
           <h3
             [ngClass]="{
@@ -120,11 +332,8 @@
           }
         </div>
       }
-    } @else {
-      <div class="loading center pad-top">
-        <div class="spinner"></div>
-      </div>
     }
+
     <div class="footer-container">
       <p
         class="footer-text"

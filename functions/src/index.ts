@@ -23,10 +23,12 @@ const generationConfig = {
 
 exports.getSuggestions = functions.https.onCall(
   async (data: { list: any }, context: any) => {
+    const listPurpose =
+      data.list?.type === 'general' ? 'a list' : 'a gift list';
     const parts = [
       { text: generateContentString(data.list) },
       {
-        text: "I'm putting together a gift list and need suggestions on what to add. Make sure the suggestions are related to the list I provide. Provide at least one suggestion for every two items in the provided list. Provide your suggestions in the form of a JSON array in an object called 'suggestions'. Please return the following JSON for each suggestion: {name: string, description: string}. ",
+        text: `I'm putting together ${listPurpose} and need suggestions on what to add. Make sure the suggestions are related to the list I provide. Provide at least one suggestion for every two items in the provided list. Provide your suggestions in the form of a JSON array in an object called 'suggestions'. Please return the following JSON for each suggestion: {name: string, description: string}. `,
       },
     ];
 

@@ -9,15 +9,18 @@ import { StorageService } from 'src/services/storage.service';
   standalone: false,
 })
 export class SpoilerPromptComponent {
-  rememberChoice: boolean = false;
+  rememberChoice: boolean = true;
   listId: string = '';
+  isAuthenticatedNonOwner: boolean = false;
 
   constructor(
-    @Inject(MAT_DIALOG_DATA) public data: { listId: string },
+    @Inject(MAT_DIALOG_DATA)
+    public data: { listId: string; isAuthenticatedNonOwner?: boolean },
     public dialogRef: MatDialogRef<SpoilerPromptComponent>,
     private storageService: StorageService,
   ) {
     this.listId = data.listId;
+    this.isAuthenticatedNonOwner = !!data.isAuthenticatedNonOwner;
   }
 
   onSelect(spoilers: boolean) {

@@ -2,8 +2,37 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true;
+    match /users/{userId} {
+      allow read: if true;
+      allow create, update: if request.auth != null;
+      allow delete: if false;
+    }
+
+    match /lists/{listId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow delete: if request.auth != null &&
+        (!('creatorUid' in resource.data) || resource.data.creatorUid == request.auth.uid);
+      allow update: if (
+        // Authenticated owner can edit anything on the list (including checking off items on General Lists)
+        request.auth != null &&
+        (!('creatorUid' in resource.data) || resource.data.creatorUid == request.auth.uid)
+      ) || (
+        // Any viewer on a gift list can update item purchased state (same item count, no other list fields changed)
+        resource.data.get('type', 'gift') == 'gift' &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['items']) &&
+        request.resource.data.items.size() == resource.data.items.size()
+      ) || (
+        // Backfill missing shortUrl on legacy lists when generating a share link
+        !('shortUrl' in resource.data) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['shortUrl'])
+      );
+    }
+
+    match /shortUrls/{shortUrl} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if request.auth != null;
     }
   }
 }

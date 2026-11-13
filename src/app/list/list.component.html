@@ -2,10 +2,28 @@
 @if (!editing) {
   <h1 class="center header pad-top">{{ list?.name }}</h1>
 } @else {
-  <div class="center header pad-top">
+  <div class="center header pad-top edit-header-fields">
     <mat-form-field>
       <input matInput type="text" [(ngModel)]="list!.name" />
     </mat-form-field>
+    <div class="classification-toggle">
+      <button
+        type="button"
+        class="classification-btn"
+        [class.selected]="isGiftList"
+        (click)="setListType('gift')"
+      >
+        <i class="fa-solid fa-gift"></i> Gift List
+      </button>
+      <button
+        type="button"
+        class="classification-btn"
+        [class.selected]="!isGiftList"
+        (click)="setListType('general')"
+      >
+        <i class="fa-solid fa-list-ul"></i> General List
+      </button>
+    </div>
   </div>
 }
 @if (loading) {
@@ -21,7 +39,7 @@
           Share
         </button>
       }
-      @if (!spoilers) {
+      @if (isOwner) {
         @if (!editing) {
           <button class="btn btn-light top-button" (click)="editList()">
             <i class="fa-solid fa-edit fa-md black-icon"></i>
@@ -57,16 +75,28 @@
             }
           </button>
         }
-      } @else {
-        <button class="btn btn-light top-button" (click)="openSaveModal()">
-          <i
-            class="fa-solid fa-plus fa-lg black-icon"
-            style="padding-right: 5px"
-          ></i>
-          Add to Saved Lists
+      } @else if (!editing) {
+        <button
+          class="btn btn-light top-button"
+          [disabled]="savingBookmark"
+          (click)="toggleSaveList()"
+        >
+          @if (isListSaved) {
+            <i
+              class="fa-solid fa-check fa-lg black-icon"
+              style="padding-right: 5px"
+            ></i>
+            Saved
+          } @else {
+            <i
+              class="fa-solid fa-plus fa-lg black-icon"
+              style="padding-right: 5px"
+            ></i>
+            Add to Saved Lists
+          }
         </button>
       }
-      @if (!editing && userHasSavedSetting) {
+      @if (!editing && isGiftList && !isOwner && userHasSavedSetting) {
         <button
           class="btn btn-light top-button"
           (click)="resetSpoilerPreference()"
@@ -79,7 +109,7 @@
         </button>
       }
     </div>
-    @if (!(spoilers && !list?.ideas)) {
+    @if (isGiftList && (isOwner || list?.ideas)) {
       <div class="ideas">
         @if (!editing) {
           <mat-accordion>
@@ -94,7 +124,7 @@
               </p>
             </mat-expansion-panel>
           </mat-accordion>
-        } @else {
+        } @else if (isOwner) {
           <mat-form-field>
             <mat-label>General, less-specific ideas of things I like</mat-label>
             <textarea
@@ -113,14 +143,25 @@
           @for (item of list?.items; track $index; let i = $index) {
             <div
               class="list-item-card"
-              [ngClass]="{ highlighted: spoilers && item.purchased }"
-              (click)="editing && !spoilers ? null : openItemModal(item)"
+              [ngClass]="{
+                highlighted: (isGiftList ? spoilers : true) && item.purchased,
+              }"
+              (click)="editing ? null : openItemModal(item)"
             >
               <div class="item-content">
+                @if (!isGiftList) {
+                  <mat-checkbox
+                    class="general-checkbox"
+                    [checked]="item.purchased"
+                    [disabled]="!isOwner || editing || saveListLoading"
+                    (click)="$event.stopPropagation()"
+                    (change)="toggleItemCheck(item)"
+                  ></mat-checkbox>
+                }
                 <div class="item-name">{{ item.name }}</div>
               </div>
 
-              @if (!spoilers) {
+              @if (isOwner) {
                 <div class="item-actions">
                   @if (!editing) {
                     <button
