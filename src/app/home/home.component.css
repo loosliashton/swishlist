@@ -93,70 +93,142 @@
 }
 
 .tabs-bar {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  width: 95%;
-  max-width: 500px;
-  margin: 20px auto 8px auto;
+  position: fixed;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: center;
+  width: 92%;
+  max-width: 400px;
+  padding: 5px;
+  background: white;
+  border-radius: 35px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+}
+
+.tab-indicator {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  left: 5px;
+  width: calc((100% - 10px) / 3);
+  border-radius: 30px;
+  background-color: rgb(237, 235, 255);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  pointer-events: none;
+  z-index: 0;
+  will-change: transform;
+}
+
+.tab-indicator.animating {
+  transition: transform 250ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tab-indicator.christmas {
+  background-color: #bfefff;
+}
+
+.tab-indicator.christmas:hover {
+  background-color: #bfefff;
+}
+
+.tab-indicator.fall {
+  background-color: #fde2cc;
+}
+
+.tab-indicator.fall:hover {
+  background-color: #fde2cc;
 }
 
 .tab-btn {
-  flex: 1;
-  padding: 10px 8px;
-  border-radius: 20px;
-  background-color: rgba(255, 255, 255, 0.7);
-  color: #444;
-  font-size: 14px;
-  font-weight: 500;
+  position: relative;
+  z-index: 1;
+  background: none;
+  border: none;
+  padding: 10px 8px 6px 8px;
+  border-radius: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   cursor: pointer;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  transition: all 0.2s ease;
+  color: #555;
+  transition: color 250ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .tab-btn.christmas,
-.tab-btn.fall {
-  background-color: rgba(255, 255, 255, 0.14);
-  color: #eee;
-  border-color: rgba(255, 255, 255, 0.2);
+.tab-btn.christmas:hover,
+.tab-btn.fall,
+.tab-btn.fall:hover {
+  background: none;
+}
+
+.tab-btn:hover {
+  color: #000;
+}
+
+.tab-btn i {
+  font-size: 1.1rem;
+}
+
+.tab-btn span {
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.1;
 }
 
 .tab-btn.active {
-  background-color: rgb(237, 235, 255);
   color: #3f0099;
-  border-color: #6200ea;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 .tab-btn.christmas.active {
-  background-color: #bfefff;
   color: #131313;
-  border-color: #bfefff;
 }
 
 .tab-btn.fall.active {
-  background-color: #dd6f20;
-  color: #fff;
-  border-color: #dd6f20;
+  color: #5c2b08;
 }
 
 .dashboard-columns {
-  width: 95%;
-  max-width: 500px;
-  margin: 16px auto 0 auto;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 20px;
+  position: relative;
+  flex: 1;
+  width: 100%;
+  margin: 16px 0 -145px 0;
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  gap: 16px;
+}
+
+.dashboard-columns::-webkit-scrollbar {
+  display: none;
 }
 
 .dashboard-column {
   display: flex;
   flex-direction: column;
+  align-items: center;
   min-width: 0;
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  padding: 4px 0 155px 0;
+  box-sizing: border-box;
+  will-change: transform;
 }
 
 .dashboard-column app-recent-list {
-  width: 100%;
+  width: 95%;
+  max-width: 500px;
   display: block;
 }
 
@@ -195,15 +267,7 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
-@media (max-width: 991px) {
-  .mobile-hidden {
-    display: none;
-  }
 
-  .column-title {
-    display: none;
-  }
-}
 
 @media (min-width: 992px) {
   .tabs-bar {
@@ -211,11 +275,27 @@
   }
 
   .dashboard-columns {
+    width: 95%;
     max-width: 1350px;
+    display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 24px;
     align-items: start;
-    margin-top: 28px;
+    margin: 28px auto 0 auto;
+    overflow-x: visible;
+    scroll-snap-type: none;
+  }
+
+  .dashboard-column {
+    align-items: stretch;
+    flex: unset;
+    padding: 0;
+    will-change: auto;
+  }
+
+  .dashboard-column app-recent-list {
+    width: 100%;
+    max-width: none;
   }
 }
 
@@ -554,6 +634,19 @@
   padding-top: 20px;
   padding-bottom: 20px;
   text-align: center;
+}
+
+@media (max-width: 991px) {
+  .footer-container {
+    padding-bottom: 95px;
+    pointer-events: none;
+    position: relative;
+    z-index: 1;
+  }
+
+  .footer-link {
+    pointer-events: auto;
+  }
 }
 
 .footer-text {

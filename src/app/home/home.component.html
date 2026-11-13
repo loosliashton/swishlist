@@ -144,6 +144,12 @@
       </div>
     } @else if (currentUser) {
     <div class="tabs-bar">
+      <div
+        class="tab-indicator"
+        [class.animating]="tabAnimating"
+        [ngClass]="{ christmas: theme === 'christmas', fall: theme === 'fall' }"
+        [style.transform]="'translate3d(' + tabProgress * 100 + '%, 0, 0)'"
+      ></div>
       <button
         type="button"
         class="tab-btn"
@@ -151,7 +157,8 @@
         [ngClass]="{ christmas: theme === 'christmas', fall: theme === 'fall' }"
         (click)="setActiveTab('my')"
       >
-        My Lists
+        <i class="fa-solid fa-list-ul"></i>
+        <span>My Lists</span>
       </button>
       <button
         type="button"
@@ -160,7 +167,8 @@
         [ngClass]="{ christmas: theme === 'christmas', fall: theme === 'fall' }"
         (click)="setActiveTab('saved')"
       >
-        Saved Lists
+        <i class="fa-solid fa-bookmark"></i>
+        <span>Saved Lists</span>
       </button>
       <button
         type="button"
@@ -169,15 +177,19 @@
         [ngClass]="{ christmas: theme === 'christmas', fall: theme === 'fall' }"
         (click)="setActiveTab('recent')"
       >
-        Recent Lists
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        <span>Recent Lists</span>
       </button>
     </div>
 
-    <div class="dashboard-columns">
-      <section
-        class="dashboard-column"
-        [class.mobile-hidden]="activeTab !== 'my'"
-      >
+    <div
+      #columnsContainer
+      class="dashboard-columns"
+      (scroll)="onColumnsScroll($event)"
+      (touchstart)="cancelScrollAnimation()"
+      (wheel)="cancelScrollAnimation()"
+    >
+      <section class="dashboard-column">
         <h3
           class="column-title"
           [ngClass]="{
@@ -228,10 +240,7 @@
         }
       </section>
 
-      <section
-        class="dashboard-column"
-        [class.mobile-hidden]="activeTab !== 'saved'"
-      >
+      <section class="dashboard-column">
         <h3
           class="column-title"
           [ngClass]="{
@@ -267,10 +276,7 @@
         }
       </section>
 
-      <section
-        class="dashboard-column"
-        [class.mobile-hidden]="activeTab !== 'recent'"
-      >
+      <section class="dashboard-column">
         <h3
           class="column-title"
           [ngClass]="{

@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -19,8 +19,11 @@ type HomeTab = 'my' | 'saved' | 'recent';
   standalone: false,
 })
 export class HomeComponent implements OnInit, OnDestroy {
+  @ViewChild('columnsContainer') columnsContainer?: ElementRef<HTMLElement>;
+
   theme: string = '';
   activeTab: HomeTab = 'my';
+  tabProgress: number = 0;
   myLists: List[] = [];
   savedListItems: { list: List; creator: User | null }[] = [];
   recentListItems: { list: List; creator: User | null }[] = [];
@@ -29,7 +32,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
   authReady: boolean = false;
   signingIn: boolean = false;
+  tabAnimating: boolean = false;
   private tabManuallySelected: boolean = false;
+  private scrollAnimationTimeout: ReturnType<typeof setTimeout> | null = null;
+  private readonly tabOrder: HomeTab[] = ['my', 'saved', 'recent'];
   private subscriptions: Subscription[] = [];
 
   constructor(
@@ -59,6 +65,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.currentUser = user;
         if (user && wasSignedOut && !this.tabManuallySelected) {
           this.activeTab = 'my';
+          this.tabProgress = 0;
         }
         this.loadUserLists(user);
       }),
@@ -68,12 +75,120 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.cancelScrollAnimation();
     this.subscriptions.forEach((sub) => sub.unsubscribe());
+  }
+
+  cancelScrollAnimation() {
+    if (this.scrollAnimationTimeout === null && !this.tabAnimating) {
+      return;
+    }
+    if (this.scrollAnimationTimeout !== null) {
+      clearTimeout(this.scrollAnimationTimeout);
+      this.scrollAnimationTimeout = null;
+    }
+    this.tabAnimating = false;
+    const container = this.columnsContainer?.nativeElement;
+    if (container) {
+      const columns = Array.from(container.children) as HTMLElement[];
+      for (const col of columns) {
+        col.style.transition = '';
+        col.style.transform = '';
+      }
+      container.style.scrollSnapType = '';
+    }
   }
 
   setActiveTab(tab: HomeTab) {
     this.tabManuallySelected = true;
     this.activeTab = tab;
+
+    const index = this.tabOrder.indexOf(tab);
+    const container = this.columnsContainer?.nativeElement;
+    if (!container || container.scrollWidth <= container.clientWidth) {
+      this.tabProgress = index;
+      return;
+    }
+
+    const columns = Array.from(container.children) as HTMLElement[];
+    const column = columns[index];
+    if (!column) return;
+
+    const currentOffset = columns[0]
+      ? new DOMMatrixReadOnly(getComputedStyle(columns[0]).transform).m41
+      : 0;
+    const startLeft = container.scrollLeft - currentOffset;
+    const targetLeft = column.offsetLeft;
+    const delta = targetLeft - startLeft;
+
+    if (this.scrollAnimationTimeout !== null) {
+      clearTimeout(this.scrollAnimationTimeout);
+      this.scrollAnimationTimeout = null;
+    }
+
+    if (Math.abs(delta) < 1) {
+      this.cancelScrollAnimation();
+      this.tabProgress = index;
+      return;
+    }
+
+    this.tabAnimating = true;
+    this.tabProgress = index;
+
+    container.style.scrollSnapType = 'none';
+    container.scrollLeft = targetLeft;
+
+    for (const col of columns) {
+      col.style.transition = 'none';
+      col.style.transform = `translate3d(${delta}px, 0, 0)`;
+    }
+
+    void container.offsetWidth;
+
+    const transitionValue = 'transform 250ms cubic-bezier(0.22, 1, 0.36, 1)';
+    for (const col of columns) {
+      col.style.transition = transitionValue;
+      col.style.transform = 'translate3d(0, 0, 0)';
+    }
+
+    this.scrollAnimationTimeout = setTimeout(() => {
+      for (const col of columns) {
+        col.style.transition = '';
+        col.style.transform = '';
+      }
+      container.style.scrollSnapType = '';
+      this.tabAnimating = false;
+      this.scrollAnimationTimeout = null;
+    }, 255);
+  }
+
+  onColumnsScroll(event: Event) {
+    if (this.tabAnimating) {
+      return;
+    }
+
+    const container = event.target as HTMLElement;
+    if (
+      !container ||
+      !container.clientWidth ||
+      container.scrollWidth <= container.clientWidth
+    ) {
+      return;
+    }
+
+    const step = container.clientWidth + 16;
+    const rawProgress = container.scrollLeft / step;
+    this.tabProgress = Math.min(
+      this.tabOrder.length - 1,
+      Math.max(0, rawProgress),
+    );
+
+    const index = Math.round(this.tabProgress);
+    const tab = this.tabOrder[index];
+    if (tab && tab !== this.activeTab) {
+      this.tabManuallySelected = true;
+      this.activeTab = tab;
+    }
   }
 
   isGiftList(list: List): boolean {
@@ -136,6 +251,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       const user = await this.firebase.signInWithGoogle();
       if (user) {
         this.activeTab = 'my';
+        this.tabProgress = 0;
       }
     } catch (error) {
       console.error('Google sign-in failed:', error);
@@ -151,6 +267,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   async signOut() {
     this.activeTab = 'my';
+    this.tabProgress = 0;
     this.tabManuallySelected = false;
     await this.firebase.signOutUser();
   }
