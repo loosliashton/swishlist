@@ -395,7 +395,7 @@
               <div class="spinner"></div>
             </div>
           } @else {
-            @for (item of recentListItems; track item.list.id) {
+            @for (item of visibleRecentListItems; track item.list.id) {
               <app-recent-list
                 [list]="item.list"
                 [creator]="item.creator?.name || 'Unknown User'"
