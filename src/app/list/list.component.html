@@ -139,12 +139,21 @@
     }
     @if (list?.items?.length) {
       <div class="list" [ngClass]="{ disabled: saveListLoading }">
-        <div class="list-items-container">
-          @for (item of list?.items; track $index; let i = $index) {
+        <div
+          class="list-items-container"
+          cdkDropList
+          cdkDropListLockAxis="y"
+          [cdkDropListDisabled]="!isOwner || !editing || saveListLoading"
+          (cdkDropListDropped)="dropItem($event)"
+        >
+          @for (item of list?.items; track item; let i = $index) {
             <div
               class="list-item-card"
+              cdkDrag
+              [cdkDragDisabled]="!isOwner || !editing || saveListLoading"
               [ngClass]="{
                 highlighted: (isGiftList ? spoilers : true) && item.purchased,
+                editing: editing,
               }"
               (click)="editing ? null : openItemModal(item)"
             >
@@ -177,20 +186,10 @@
                       <i class="fa-solid fa-trash"></i>
                     </button>
                   } @else {
-                    <button
-                      class="action-btn"
-                      (click)="moveItem(i, 'up')"
-                      [disabled]="i === 0"
-                    >
-                      <i class="fa-solid fa-arrow-up"></i>
-                    </button>
-                    <button
-                      class="action-btn"
-                      (click)="moveItem(i, 'down')"
-                      [disabled]="i === list!.items!.length - 1"
-                    >
-                      <i class="fa-solid fa-arrow-down"></i>
-                    </button>
+                    <i
+                      class="fa-solid fa-grip-vertical drag-handle"
+                      aria-hidden="true"
+                    ></i>
                   }
                 </div>
               }

@@ -13,6 +13,7 @@ import { SuggestionsComponent } from './suggestions/suggestions.component';
 import { ShareComponent } from './share/share.component';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subscription } from 'rxjs';
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { RecentListsModalComponent } from './item/recent-lists-modal/recent-lists-modal.component';
 import { RecentListsModalFunctionality } from './item/recent-lists-modal/recent-lists-modal-functionality.enum';
 import { StorageService } from 'src/services/storage.service';
@@ -396,17 +397,9 @@ export class ListComponent implements OnInit, OnDestroy {
     });
   }
 
-  moveItem(index: number, direction: string) {
-    if (!this.isOwner) return;
-    this.swapItems(index, index + (direction === 'up' ? -1 : 1));
-  }
-
-  swapItems(index1: number, index2: number) {
-    if (this.list) {
-      const temp = this.list.items![index1];
-      this.list.items![index1] = this.list.items![index2];
-      this.list.items![index2] = temp;
-    }
+  dropItem(event: CdkDragDrop<Item[]>) {
+    if (!this.isOwner || !this.editing || !this.list?.items) return;
+    moveItemInArray(this.list.items, event.previousIndex, event.currentIndex);
   }
 
   checkIfUserHasSavedSpoilerSetting(): boolean {

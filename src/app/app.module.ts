@@ -22,6 +22,7 @@ import { ChangeNameComponent } from './home/change-name/change-name.component';
 import { SuggestionsComponent } from './list/suggestions/suggestions.component';
 import { ShareComponent } from './list/share/share.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 import { CommonModule } from '@angular/common';
 import { RecentListComponent } from './list/recent-list/recent-list.component';
 import { ServiceWorkerModule } from '@angular/service-worker';
@@ -69,6 +70,7 @@ const routes: Routes = [
     MatExpansionModule,
     MatSnackBarModule,
     MatProgressSpinnerModule,
+    DragDropModule,
     FormsModule,
     CommonModule,
     RecentListComponent,
