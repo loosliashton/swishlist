@@ -297,6 +297,8 @@ export class ListComponent implements OnInit, OnDestroy {
         isGeneralList: !this.isGiftList,
         isOwner: this.isOwner,
       },
+      width: '90vw',
+      maxWidth: '500px',
     });
 
     let copiedSub: Subscription | undefined;

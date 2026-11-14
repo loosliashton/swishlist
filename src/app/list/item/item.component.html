@@ -1,34 +1,78 @@
-<h2 mat-dialog-title>
-  @if (item.url) {
-    <a href="{{ item.affiliateUrl || item.url }}" target="_blank">{{
-      item.name
-    }}</a>
-  }
-  @if (!item.url) {
-    <span>{{ item.name }}</span>
-  }
-</h2>
-<mat-dialog-content>
-  <p>{{ item.details }}</p>
-</mat-dialog-content>
-<mat-dialog-actions>
-  @if (!isGeneralList && spoilers) {
-    <button mat-button color="primary" (click)="togglePurchase()">
-      {{ item.purchased ? "Mark as Not Purchased" : "Mark as Purchased" }}
-    </button>
-  }
-  @if (isGeneralList && isOwner) {
-    <button mat-button color="primary" (click)="togglePurchase()">
-      {{ item.purchased ? "Uncheck Item" : "Check Off Item" }}
-    </button>
-  }
-  @if (item.camelUrl) {
-    <a mat-button color="accent" href="{{ item.camelUrl }}" target="_blank">
-      Track Price
-    </a>
-  }
-  <button mat-button color="accent" (click)="openCopyToListModal()">
-    Copy To List
+<div class="item-dialog-header">
+  <h2 mat-dialog-title class="item-title">
+    @if (item.url) {
+      <a
+        href="{{ item.affiliateUrl || item.url }}"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="item-link"
+      >
+        {{ item.name }}
+        <i class="fa-solid fa-arrow-up-right-from-square external-icon"></i>
+      </a>
+    } @else {
+      <span>{{ item.name }}</span>
+    }
+  </h2>
+  <button
+    mat-icon-button
+    mat-dialog-close
+    class="close-icon-btn"
+    aria-label="Close"
+  >
+    <i class="fa-solid fa-xmark"></i>
   </button>
-  <button mat-button mat-dialog-close>Close</button>
+</div>
+
+@if (item.details) {
+  <mat-dialog-content class="item-content">
+    <p class="item-details">{{ item.details }}</p>
+  </mat-dialog-content>
+}
+
+<mat-dialog-actions class="item-actions">
+  @if ((!isGeneralList && spoilers) || (isGeneralList && isOwner)) {
+    <button
+      mat-flat-button
+      color="primary"
+      class="primary-action-btn"
+      (click)="togglePurchase()"
+    >
+      <i
+        class="fa-solid"
+        [class.fa-check]="!item.purchased"
+        [class.fa-rotate-left]="item.purchased"
+      ></i>
+      @if (!isGeneralList && spoilers) {
+        {{ item.purchased ? "Mark as Not Purchased" : "Mark as Purchased" }}
+      } @else {
+        {{ item.purchased ? "Uncheck Item" : "Check Off Item" }}
+      }
+    </button>
+  }
+
+  <div class="secondary-actions" [class.single-action]="!item.camelUrl">
+    @if (item.camelUrl) {
+      <a
+        mat-stroked-button
+        color="accent"
+        class="secondary-action-btn"
+        href="{{ item.camelUrl }}"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <i class="fa-solid fa-chart-line"></i>
+        Track Price
+      </a>
+    }
+    <button
+      mat-stroked-button
+      color="accent"
+      class="secondary-action-btn"
+      (click)="openCopyToListModal()"
+    >
+      <i class="fa-solid fa-copy"></i>
+      Copy To List
+    </button>
+  </div>
 </mat-dialog-actions>
