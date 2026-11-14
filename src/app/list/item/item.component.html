@@ -56,11 +56,12 @@
       <button
         mat-stroked-button
         color="primary"
-        class="secondary-action-btn"
+        class="secondary-action-btn icon-collapse-btn"
+        aria-label="Edit"
         (click)="onEditItem()"
       >
         <i class="fa-solid fa-pen"></i>
-        Edit
+        <span class="btn-label">Edit</span>
       </button>
     }
     @if (item.camelUrl) {
@@ -79,11 +80,12 @@
     <button
       mat-stroked-button
       color="accent"
-      class="secondary-action-btn"
+      class="secondary-action-btn icon-collapse-btn"
+      aria-label="Copy To List"
       (click)="openCopyToListModal()"
     >
       <i class="fa-solid fa-copy"></i>
-      Copy To List
+      <span class="btn-label">Copy To List</span>
     </button>
   </div>
 </mat-dialog-actions>

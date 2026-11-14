@@ -207,7 +207,11 @@
       @if (controls.length) {
         <div class="combined-actions">
           @if (controls.includes("add")) {
-            <button class="action-bar-btn" (click)="openAddModal()">
+            <button
+              class="action-bar-btn"
+              aria-label="Add Item"
+              (click)="openAddModal()"
+            >
               <i class="fa-solid fa-plus fa-lg"></i>
               <span>Add Item</span>
             </button>
@@ -216,7 +220,11 @@
             <div class="action-divider"></div>
           }
           @if (controls.includes("suggestions")) {
-            <button class="action-bar-btn" (click)="openSuggestionModal()">
+            <button
+              class="action-bar-btn"
+              aria-label="Suggestions"
+              (click)="openSuggestionModal()"
+            >
               <i class="fa-solid fa-wand-magic-sparkles fa-lg"></i>
               <span>Suggestions</span>
             </button>

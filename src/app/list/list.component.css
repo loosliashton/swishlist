@@ -355,3 +355,14 @@
     justify-content: space-evenly;
   }
 }
+
+@media (max-width: 300px) {
+  .action-bar-btn {
+    justify-content: center;
+    padding: 12px 18px;
+  }
+
+  .action-bar-btn span {
+    display: none;
+  }
+}
