@@ -10,7 +10,7 @@ const apiKey = functions.config().gemini.key;
 const gemini = new GoogleGenerativeAI(apiKey);
 
 const model = gemini.getGenerativeModel({
-  model: 'gemini-2.5-flash-lite',
+  model: 'gemini-3.5-flash-lite',
 });
 
 const generationConfig = {
@@ -23,10 +23,12 @@ const generationConfig = {
 
 exports.getSuggestions = functions.https.onCall(
   async (data: { list: any }, context: any) => {
+    const listPurpose =
+      data.list?.type === 'general' ? 'a list' : 'a gift list';
     const parts = [
       { text: generateContentString(data.list) },
       {
-        text: "I'm putting together a gift list and need suggestions on what to add. Make sure the suggestions are related to the list I provide. Provide at least one suggestion for every two items in the provided list. Provide your suggestions in the form of a JSON array in an object called 'suggestions'. Please return the following JSON for each suggestion: {name: string, description: string}. ",
+        text: `I'm putting together ${listPurpose} and need suggestions on what to add. Make sure the suggestions are related to the list I provide. Provide at least one suggestion for every two items in the provided list. Provide your suggestions in the form of a JSON array in an object called 'suggestions'. Please return the following JSON for each suggestion: {name: string, description: string}. `,
       },
     ];
 
@@ -56,26 +58,17 @@ const amazonAsin = require('amazon-asin');
 
 exports.getAmazonLinks = functions.https.onCall(
   async (data: { url: string }, context: any) => {
-    const storeId = 'swishlist00-20';
+    const storeId = 'swishlist0c-20';
     const result = await amazonAsin.asyncParseAsin(data.url);
     if (!result.ASIN) return { keepaUrl: '', affiliateUrl: data.url };
     let keepaUrl = `https://keepa.com/#!search/1-${result.ASIN}`;
     // Preserve any existing affiliate tags
     let affiliateUrl = data.url.includes('tag=')
       ? null
-      : `http://www.amazon.com/dp/${result.ASIN}/ref=nosim?tag=${storeId}`;
+      : `https://www.amazon.com/dp/${result.ASIN}/ref=nosim?tag=${storeId}`;
     return {
       keepaUrl,
       affiliateUrl,
     };
-  },
-);
-
-// Legacy function for compatibility with old code
-exports.getCamelLink = functions.https.onCall(
-  async (data: { url: string }, context: any) => {
-    const result = await amazonAsin.asyncParseAsin(data.url);
-    if (!result.ASIN) return '';
-    return `https://keepa.com/#!search/1-${result.ASIN}`;
   },
 );

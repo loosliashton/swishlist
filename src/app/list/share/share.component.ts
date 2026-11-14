@@ -26,20 +26,27 @@ export class ShareComponent {
   }
 
   ngOnInit() {
-    this.firebase.createAndAddShortUrl(this.list).then((url) => {
-      this.shareUrl = `http://swishlist.cc/${url}`;
-      this.loading = false;
-      // If share API is available, prompt share dialog
-      if (navigator.share) {
-        navigator
-          .share({
-            title: 'Check out my list!',
-            text: 'Here is a link to my list:',
-            url: this.shareUrl,
-          })
-          .catch((error) => console.log('Error sharing', error));
-      }
-    });
+    this.firebase
+      .createAndAddShortUrl(this.list)
+      .then((url) => {
+        this.shareUrl = `https://swishlist.cc/${url}`;
+        this.loading = false;
+        // If share API is available, prompt share dialog
+        if (navigator.share) {
+          navigator
+            .share({
+              title: 'Check out my list!',
+              text: 'Here is a link to my list:',
+              url: this.shareUrl,
+            })
+            .catch((error) => console.log('Error sharing', error));
+        }
+      })
+      .catch((error) => {
+        console.error('Error creating short URL:', error);
+        this.shareUrl = `https://swishlist.cc/list/${this.list.id}`;
+        this.loading = false;
+      });
   }
 
   copyToClipboard() {

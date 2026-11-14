@@ -4,19 +4,10 @@ import { Injectable } from '@angular/core';
   providedIn: 'root',
 })
 export class StorageService {
-  private readonly LAST_EMAIL_KEY = 'lastEmail';
   private readonly RECENT_LISTS_KEY = 'recentLists';
   private readonly SPOILER_CHOICES_KEY = 'spoilerChoices';
 
   constructor() {}
-
-  getLastEmail(): string | null {
-    return localStorage.getItem(this.LAST_EMAIL_KEY);
-  }
-
-  setLastEmail(email: string): void {
-    localStorage.setItem(this.LAST_EMAIL_KEY, email);
-  }
 
   getRecentLists(): { [id: string]: string } {
     return JSON.parse(localStorage.getItem(this.RECENT_LISTS_KEY) || '{}');

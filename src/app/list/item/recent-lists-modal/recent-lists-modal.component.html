@@ -1,27 +1,46 @@
-@if (!loading) {
-  @if (recentListItems.length) {
-    <h3 mat-dialog-title>{{ this.title }}</h3>
-    <mat-dialog-content>
-      <div class="lists" [ngClass]="{ disabled: copyLoading }">
-        @for (item of recentListItems; track item.list.id) {
-          <app-recent-list
-            [list]="item.list"
-            [creator]="item.creator?.name || 'Unknown User'"
-            (listClicked)="selectList(item.list, item.creator)"
-          ></app-recent-list>
-        }
-      </div>
-    </mat-dialog-content>
-  } @else {
-    <h3 mat-dialog-title>No Recent Lists</h3>
-    <mat-dialog-content>
-      <p>Lists that you've recently viewed will appear here.</p>
-    </mat-dialog-content>
-  }
-} @else {
+@if (loading) {
   <mat-dialog-content>
     <div class="loading">
       <div class="spinner"></div>
     </div>
+  </mat-dialog-content>
+} @else if (needsAuth) {
+  <h3 mat-dialog-title>Sign In Required</h3>
+  <mat-dialog-content>
+    <p>Sign in to add items to your own lists.</p>
+    <div style="margin-top: 16px; display: flex; justify-content: center">
+      <button
+        mat-raised-button
+        color="primary"
+        [disabled]="signingIn"
+        (click)="signIn()"
+      >
+        <i class="fa-brands fa-google" style="margin-right: 8px"></i>
+        {{ signingIn ? "Signing in..." : "Sign in with Google" }}
+      </button>
+    </div>
+  </mat-dialog-content>
+} @else if (recentListItems.length) {
+  <h3 mat-dialog-title>{{ this.title }}</h3>
+  <mat-dialog-content>
+    <div class="lists" [ngClass]="{ disabled: copyLoading }">
+      @for (item of recentListItems; track item.list.id) {
+        <app-recent-list
+          [list]="item.list"
+          [creator]="item.creator?.name || 'Unknown User'"
+          (listClicked)="selectList(item.list, item.creator)"
+        ></app-recent-list>
+      }
+    </div>
+  </mat-dialog-content>
+} @else if (isNavigateMode) {
+  <h3 mat-dialog-title>No Recent Lists</h3>
+  <mat-dialog-content>
+    <p>Lists that you've recently viewed will appear here.</p>
+  </mat-dialog-content>
+} @else {
+  <h3 mat-dialog-title>No Owned Lists</h3>
+  <mat-dialog-content>
+    <p>Create a list in My Lists before adding items to it.</p>
   </mat-dialog-content>
 }

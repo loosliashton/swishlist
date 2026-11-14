@@ -7,6 +7,7 @@ import {
   MatDialogRef,
   MatDialog,
 } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
 import { List } from 'src/models/list';
 import { Item } from 'src/models/item';
 import { FirebaseService } from 'src/services/firebase.service';
@@ -19,7 +20,7 @@ import { StorageService } from 'src/services/storage.service';
 
 @Component({
   selector: 'app-recent-lists-modal',
-  imports: [CommonModule, MatDialogModule, RecentListComponent],
+  imports: [CommonModule, MatDialogModule, MatButtonModule, RecentListComponent],
   templateUrl: './recent-lists-modal.component.html',
   styleUrl: './recent-lists-modal.component.css',
 })
@@ -27,6 +28,8 @@ export class RecentListsModalComponent implements OnInit {
   recentListItems: { list: List; creator: User | null }[] = [];
   loading: boolean = false;
   copyLoading: boolean = false;
+  needsAuth: boolean = false;
+  signingIn: boolean = false;
   functionality: RecentListsModalFunctionality =
     RecentListsModalFunctionality.NavigateToList;
   item: Item | null = null;
@@ -64,27 +67,73 @@ export class RecentListsModalComponent implements OnInit {
     }
   }
 
+  get isNavigateMode(): boolean {
+    return this.functionality === RecentListsModalFunctionality.NavigateToList;
+  }
+
   async ngOnInit() {
-    // Retrieve recent lists
-    const sortedIds = this.storageService.getSortedRecentListIds();
-    if (!sortedIds.length) return;
     this.loading = true;
+    this.needsAuth = false;
 
-    this.recentListItems = await this.firebase.getListsWithCreators(
-      sortedIds.slice(0, 10),
-    );
+    if (this.isNavigateMode) {
+      const sortedIds = this.storageService.getSortedRecentListIds();
+      if (!sortedIds.length) {
+        this.recentListItems = [];
+        this.loading = false;
+        return;
+      }
 
-    if (this.functionality === RecentListsModalFunctionality.NavigateToList) {
-      // Filter out the currenct list
+      this.recentListItems = await this.firebase.getListsWithCreators(
+        sortedIds.slice(0, 10),
+      );
+
+      // Filter out the current list
       const index = this.recentListItems.findIndex(
         (item) => item.list.id === this.currentListId,
       );
       if (index !== -1) {
         this.recentListItems.splice(index, 1);
       }
+
+      this.loading = false;
+      return;
     }
 
+    const user = await this.firebase.waitForAuthReady();
+    if (!user) {
+      this.needsAuth = true;
+      this.loading = false;
+      return;
+    }
+
+    const freshUser = (await this.firebase.refreshCurrentUser()) ?? user;
+    const ownedLists = await this.firebase.getLists(freshUser, false);
+    this.recentListItems = ownedLists.map((list) => ({
+      list,
+      creator: freshUser,
+    }));
     this.loading = false;
+  }
+
+  async signIn() {
+    if (this.signingIn) return;
+    this.signingIn = true;
+    try {
+      const user = await this.firebase.signInWithGoogle();
+      if (user) {
+        this.needsAuth = false;
+        await this.ngOnInit();
+      }
+    } catch (error) {
+      console.error('Google sign-in failed:', error);
+      this.snackbar.open(
+        'Sign in cancelled or failed. Please try again.',
+        'Close',
+        { duration: 3000 },
+      );
+    } finally {
+      this.signingIn = false;
+    }
   }
 
   async selectList(list: List, user: User | null) {
@@ -126,7 +175,8 @@ export class RecentListsModalComponent implements OnInit {
     } else {
       // Reset 'purchased' status for the new copy.
       const itemCopy: Item = { ...this.item!, purchased: false };
-      list.items?.push(itemCopy);
+      if (!list.items) list.items = [];
+      list.items.push(itemCopy);
       await this.saveAndClose(list);
     }
   }

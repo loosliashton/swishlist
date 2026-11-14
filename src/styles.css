@@ -99,6 +99,16 @@ body {
   font-family: Roboto, "Helvetica Neue", sans-serif;
 }
 
+html.christmas-theme,
+body.christmas-theme {
+  background-color: rgb(24, 0, 54);
+}
+
+html.fall-theme,
+body.fall-theme {
+  background-color: #2e1a0f;
+}
+
 .disabled {
   pointer-events: none;
   opacity: 0.5;

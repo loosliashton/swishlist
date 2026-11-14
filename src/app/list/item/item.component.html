@@ -12,9 +12,14 @@
   <p>{{ item.details }}</p>
 </mat-dialog-content>
 <mat-dialog-actions>
-  @if (spoilers) {
+  @if (!isGeneralList && spoilers) {
     <button mat-button color="primary" (click)="togglePurchase()">
       {{ item.purchased ? "Mark as Not Purchased" : "Mark as Purchased" }}
+    </button>
+  }
+  @if (isGeneralList && isOwner) {
+    <button mat-button color="primary" (click)="togglePurchase()">
+      {{ item.purchased ? "Uncheck Item" : "Check Off Item" }}
     </button>
   }
   @if (item.camelUrl) {

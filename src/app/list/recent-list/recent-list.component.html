@@ -5,17 +5,27 @@
 >
   <div class="list-header">
     <p class="list-desc">
-      <strong>{{ list.name }}</strong
+      <strong
+        ><i
+          class="fa-solid"
+          [ngClass]="isGiftList ? 'fa-gift' : 'fa-list-ul'"
+          style="margin-right: 6px"
+        ></i
+        >{{ list.name }}</strong
       ><br />{{ creator }}
     </p>
     <div class="list-info accent">
       <p>
-        {{ list.items?.length }}
-        {{ list.items?.length === 1 ? "item" : "items" }}
+        {{ list.items?.length || 0 }}
+        {{ (list.items?.length || 0) === 1 ? "item" : "items" }}
       </p>
       @if (showDeleteButton) {
         <div (click)="onDelete($event)">
-          <i class="fa-solid fa-xmark fa-xl" style="padding-left: 10px"></i>
+          <i
+            class="fa-solid"
+            [ngClass]="deleteIcon === 'trash' ? 'fa-trash fa-lg' : 'fa-xmark fa-xl'"
+            style="padding-left: 10px"
+          ></i>
         </div>
       }
     </div>

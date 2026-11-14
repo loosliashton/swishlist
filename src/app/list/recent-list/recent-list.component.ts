@@ -12,12 +12,17 @@ export class RecentListComponent {
   @Input() list!: List;
   @Input() creator: string = 'Unknown';
   @Input() showDeleteButton: boolean = false;
+  @Input() deleteIcon: 'xmark' | 'trash' = 'xmark';
   @Input() theme: string = '';
   @Output() listClicked = new EventEmitter<List>();
   @Output() deleteClicked = new EventEmitter<{
     list: List;
     event: MouseEvent;
   }>();
+
+  get isGiftList(): boolean {
+    return (this.list?.type ?? 'gift') === 'gift';
+  }
 
   onClick() {
     this.listClicked.emit(this.list);

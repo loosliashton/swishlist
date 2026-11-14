@@ -16,6 +16,302 @@
   margin-top: 10px;
 }
 
+.auth-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.auth-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 24px;
+  border-radius: 30px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #222;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.auth-btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.sign-out-link {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 14px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.user-greeting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 0 12px;
+}
+
+.greeting-name-row {
+  gap: 6px;
+  flex-wrap: wrap;
+  text-align: center;
+}
+
+.greeting-actions-row {
+  gap: 6px;
+}
+
+.greeting-text {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+.greeting-sep {
+  color: #888;
+}
+
+.greeting-text.white-title,
+.greeting-sep.white-title {
+  color: white;
+}
+
+.edit-name-btn {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 50%;
+}
+
+.sign-out-link.white-link,
+.edit-name-btn.white-link {
+  color: lightgray;
+}
+
+.edit-name-btn:hover {
+  opacity: 0.8;
+}
+
+.tabs-bar {
+  position: fixed;
+  bottom: calc(15px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: center;
+  width: 92%;
+  max-width: 400px;
+  padding: 5px;
+  background: white;
+  border-radius: 35px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+}
+
+.tab-indicator {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  left: 5px;
+  width: calc((100% - 10px) / 3);
+  border-radius: 30px;
+  background-color: rgb(237, 235, 255);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  pointer-events: none;
+  z-index: 0;
+  will-change: transform;
+}
+
+.tab-indicator.animating {
+  transition: transform 250ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tab-indicator.christmas {
+  background-color: #bfefff;
+}
+
+.tab-indicator.christmas:hover {
+  background-color: #bfefff;
+}
+
+.tab-indicator.fall {
+  background-color: #fde2cc;
+}
+
+.tab-indicator.fall:hover {
+  background-color: #fde2cc;
+}
+
+.tab-btn {
+  position: relative;
+  z-index: 1;
+  background: none;
+  border: none;
+  padding: 10px 8px 6px 8px;
+  border-radius: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  color: #555;
+  transition: color 250ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tab-btn.christmas,
+.tab-btn.christmas:hover,
+.tab-btn.fall,
+.tab-btn.fall:hover {
+  background: none;
+}
+
+.tab-btn:hover {
+  color: #000;
+}
+
+.tab-btn i {
+  font-size: 1.1rem;
+}
+
+.tab-btn span {
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+.tab-btn.active {
+  color: #3f0099;
+}
+
+.tab-btn.christmas.active {
+  color: #131313;
+}
+
+.tab-btn.fall.active {
+  color: #5c2b08;
+}
+
+.dashboard-columns {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  margin: 16px 0 0 0;
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  gap: 16px;
+}
+
+.dashboard-columns::-webkit-scrollbar {
+  display: none;
+}
+
+.dashboard-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  padding: 4px 0 calc(95px + env(safe-area-inset-bottom, 0px)) 0;
+  box-sizing: border-box;
+  will-change: transform;
+}
+
+.dashboard-column app-recent-list {
+  width: 95%;
+  max-width: 500px;
+  display: block;
+}
+
+.column-title {
+  text-align: center;
+  margin-bottom: 14px;
+  font-size: 20px;
+}
+
+.empty-column-text {
+  text-align: center;
+  color: #777;
+  margin: 12px 0;
+  font-size: 15px;
+}
+
+.empty-column-text.white-text {
+  color: lightgray;
+}
+
+.add-list-container {
+  margin-top: 8px;
+}
+
+.add-list-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: 30px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #222;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+
+
+@media (min-width: 992px) {
+  .tabs-bar {
+    display: none;
+  }
+
+  .dashboard-columns {
+    width: 95%;
+    max-width: 1350px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+    align-items: start;
+    margin: 28px auto 0 auto;
+    overflow-x: visible;
+    scroll-snap-type: none;
+  }
+
+  .dashboard-column {
+    align-items: stretch;
+    flex: unset;
+    padding: 0;
+    will-change: auto;
+  }
+
+  .dashboard-column app-recent-list {
+    width: 100%;
+    max-width: none;
+  }
+}
+
 .submit-button {
   width: 35px;
   height: 30px;
@@ -334,8 +630,29 @@
   animation-delay: 5s, 0.5s;
 }
 
+.christmas-body::before,
+.fall-body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.christmas-body::before {
+  background: rgb(24, 0, 54);
+}
+
+.fall-body::before {
+  background: #2e1a0f;
+}
+
 .home-container {
+  position: relative;
+  z-index: 0;
   min-height: 100vh;
+  min-height: 100dvh;
+  padding-top: env(safe-area-inset-top, 0px);
   display: flex;
   flex-direction: column;
 }
@@ -343,22 +660,14 @@
 .snowflakes {
   display: flex;
   flex-direction: column;
+  flex: 1;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
-.footer-container {
-  margin-top: auto;
-  padding-top: 20px;
-  padding-bottom: 20px;
-  text-align: center;
-}
-
-.footer-text {
-  color: black;
-}
-
-.footer-text.white-text {
-  color: lightgray;
+.help-dialog-text {
+  margin: 8px 0 0 0;
+  font-size: 16px;
 }
 
 .footer-link {

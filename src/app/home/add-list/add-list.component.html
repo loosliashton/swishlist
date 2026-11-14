@@ -1,0 +1,51 @@
+<h2 mat-dialog-title>Add List</h2>
+<mat-dialog-content>
+  <mat-form-field style="width: 100%">
+    <mat-label>List Name</mat-label>
+    <input matInput placeholder="Enter a name..." #listName />
+  </mat-form-field>
+
+  <div class="list-type-selector">
+    <label class="selector-label">List Type</label>
+    <div class="type-options">
+      <button
+        type="button"
+        class="type-option"
+        [class.selected]="listType === 'gift'"
+        (click)="listType = 'gift'"
+      >
+        <i class="fa-solid fa-gift"></i>
+        <div class="type-text">
+          <div class="type-title">Gift List</div>
+          <div class="type-desc">Spoiler protection &amp; "Stuff I Like"</div>
+        </div>
+      </button>
+      <button
+        type="button"
+        class="type-option"
+        [class.selected]="listType === 'general'"
+        (click)="listType = 'general'"
+      >
+        <i class="fa-solid fa-list-ul"></i>
+        <div class="type-text">
+          <div class="type-title">General List</div>
+          <div class="type-desc">Checklist with no spoilers</div>
+        </div>
+      </button>
+    </div>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button mat-dialog-close>Cancel</button>
+  @if (!loading) {
+    <button mat-button (click)="addList(listName.value)">Add</button>
+  } @else {
+    <button mat-button>
+      <mat-progress-spinner
+        mode="indeterminate"
+        diameter="20"
+        [strokeWidth]="2"
+      ></mat-progress-spinner>
+    </button>
+  }
+</mat-dialog-actions>
