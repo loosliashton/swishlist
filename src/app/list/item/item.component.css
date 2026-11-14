@@ -38,8 +38,31 @@
 
 .close-icon-btn {
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
   color: #666;
+  cursor: pointer;
   margin-top: -4px;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+
+.close-icon-btn:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+  color: #222;
+}
+
+.close-icon-btn i {
+  font-size: 1.15rem;
+  line-height: 1;
 }
 
 .item-content {
@@ -75,7 +98,7 @@
 
 @media (max-width: 600px) {
   .item-dialog-header {
-    padding: 14px 10px 6px 20px;
+    padding: 14px 12px 6px 20px;
   }
 
   .item-actions {
@@ -97,8 +120,8 @@
     width: 100%;
   }
 
-  .secondary-actions.single-action {
-    grid-template-columns: 1fr;
+  .secondary-actions > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
   }
 
   .secondary-action-btn {

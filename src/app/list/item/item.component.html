@@ -15,7 +15,7 @@
     }
   </h2>
   <button
-    mat-icon-button
+    type="button"
     mat-dialog-close
     class="close-icon-btn"
     aria-label="Close"
@@ -51,7 +51,18 @@
     </button>
   }
 
-  <div class="secondary-actions" [class.single-action]="!item.camelUrl">
+  <div class="secondary-actions">
+    @if (isOwner) {
+      <button
+        mat-stroked-button
+        color="primary"
+        class="secondary-action-btn"
+        (click)="onEditItem()"
+      >
+        <i class="fa-solid fa-pen"></i>
+        Edit
+      </button>
+    }
     @if (item.camelUrl) {
       <a
         mat-stroked-button

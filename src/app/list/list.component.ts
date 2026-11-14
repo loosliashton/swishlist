@@ -302,6 +302,7 @@ export class ListComponent implements OnInit, OnDestroy {
     });
 
     let copiedSub: Subscription | undefined;
+    let editSub: Subscription | undefined;
     if (dialogRef.componentInstance) {
       copiedSub = dialogRef.componentInstance.copiedListEvent.subscribe(
         (listId: string) => {
@@ -310,10 +311,14 @@ export class ListComponent implements OnInit, OnDestroy {
           }
         },
       );
+      editSub = dialogRef.componentInstance.editItemEvent.subscribe(() => {
+        this.editItem(item);
+      });
     }
 
     dialogRef.afterClosed().subscribe((result) => {
       if (copiedSub) copiedSub.unsubscribe();
+      if (editSub) editSub.unsubscribe();
       if (result) this.saveItemsOnly();
     });
   }
