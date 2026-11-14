@@ -27,9 +27,13 @@ import { RecentListComponent } from './list/recent-list/recent-list.component';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { ShareTargetComponent } from './share-target/share-target.component';
 import { ShortUrlReceiverComponent } from './short-url-receiver/short-url-receiver.component';
+import { AboutComponent } from './about/about.component';
+import { PrivacyComponent } from './privacy/privacy.component';
 
 const routes: Routes = [
   { path: '', component: HomeComponent },
+  { path: 'about', component: AboutComponent },
+  { path: 'privacy', component: PrivacyComponent },
   { path: 'my-lists', redirectTo: '', pathMatch: 'full' },
   { path: 'list/:id', component: ListComponent },
   { path: 'list', redirectTo: '/', pathMatch: 'full' },
