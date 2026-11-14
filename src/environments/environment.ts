@@ -7,7 +7,7 @@ export const environment = {
 // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: 'AIzaSyDxZIKtuQ3gFXnAjWSVnmgh51pPxmSPjmA',
-  authDomain: 'christmas-list-4b180.firebaseapp.com',
+  authDomain: 'swishlist.cc',
   projectId: 'christmas-list-4b180',
   storageBucket: 'christmas-list-4b180.appspot.com',
   messagingSenderId: '1064787530858',
