@@ -297,9 +297,12 @@ export class ListComponent implements OnInit, OnDestroy {
         isGeneralList: !this.isGiftList,
         isOwner: this.isOwner,
       },
+      width: '90vw',
+      maxWidth: '500px',
     });
 
     let copiedSub: Subscription | undefined;
+    let editSub: Subscription | undefined;
     if (dialogRef.componentInstance) {
       copiedSub = dialogRef.componentInstance.copiedListEvent.subscribe(
         (listId: string) => {
@@ -308,10 +311,14 @@ export class ListComponent implements OnInit, OnDestroy {
           }
         },
       );
+      editSub = dialogRef.componentInstance.editItemEvent.subscribe(() => {
+        this.editItem(item);
+      });
     }
 
     dialogRef.afterClosed().subscribe((result) => {
       if (copiedSub) copiedSub.unsubscribe();
+      if (editSub) editSub.unsubscribe();
       if (result) this.saveItemsOnly();
     });
   }

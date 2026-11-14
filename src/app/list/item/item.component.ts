@@ -21,6 +21,7 @@ export class ItemComponent {
   isGeneralList: boolean = false;
   isOwner: boolean = false;
   @Output() copiedListEvent = new EventEmitter<string>();
+  @Output() editItemEvent = new EventEmitter<void>();
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: any,
@@ -36,6 +37,11 @@ export class ItemComponent {
   togglePurchase() {
     this.item.purchased = !this.item.purchased;
     this.dialogRef.close(true);
+  }
+
+  onEditItem() {
+    this.editItemEvent.emit();
+    this.dialogRef.close();
   }
 
   openCopyToListModal() {
