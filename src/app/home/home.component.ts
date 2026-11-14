@@ -74,13 +74,17 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       }),
       this.firebase.currentUser$.subscribe((user) => {
-        const wasSignedOut = !this.currentUser;
+        const prevUser = this.currentUser;
+        const wasSignedOut = !prevUser;
         this.currentUser = user;
         if (user && wasSignedOut && !this.tabManuallySelected) {
           this.activeTab = 'my';
           this.tabProgress = 0;
         }
         this.loadUserLists(user);
+        if (prevUser?.id !== user?.id) {
+          this.loadRecentLists();
+        }
       }),
     );
 
@@ -281,8 +285,31 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
   }
 
+  get visibleRecentListItems(): { list: List; creator: User | null }[] {
+    if (!this.currentUser) {
+      return this.recentListItems;
+    }
+    return this.recentListItems.filter((item) => !this.isOwnList(item.list));
+  }
+
+  private isOwnList(list: List): boolean {
+    if (!this.currentUser) {
+      return false;
+    }
+    if (this.currentUser.id && list.creatorID === this.currentUser.id) {
+      return true;
+    }
+    if (this.currentUser.uid && list.creatorUid === this.currentUser.uid) {
+      return true;
+    }
+    return !!(list.id && this.currentUser.lists?.includes(list.id));
+  }
+
   private async loadRecentLists() {
-    const sortedIds = this.storageService.getSortedRecentListIds();
+    const ownedIds = new Set(this.currentUser?.lists ?? []);
+    const sortedIds = this.storageService
+      .getSortedRecentListIds()
+      .filter((id) => !ownedIds.has(id));
     if (!sortedIds.length) {
       this.recentListItems = [];
       this.loading = false;
