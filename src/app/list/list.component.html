@@ -167,7 +167,21 @@
                     (change)="toggleItemCheck(item)"
                   ></mat-checkbox>
                 }
-                <div class="item-name">{{ item.name }}</div>
+                @if (item.imageUrl) {
+                  <img
+                    class="item-thumbnail"
+                    [src]="item.imageUrl"
+                    [alt]="item.name"
+                    loading="lazy"
+                    (error)="item.imageUrl = null"
+                  />
+                }
+                <div class="item-text">
+                  <div class="item-name">{{ item.name }}</div>
+                  @if (item.price) {
+                    <div class="item-price">{{ item.price }}</div>
+                  }
+                </div>
               </div>
 
               @if (isOwner) {

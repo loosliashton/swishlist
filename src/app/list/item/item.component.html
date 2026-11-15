@@ -24,9 +24,40 @@
   </button>
 </div>
 
-@if (item.details) {
+@if (item.imageUrl || item.price || item.details) {
   <mat-dialog-content class="item-content">
-    <p class="item-details">{{ item.details }}</p>
+    @if (item.imageUrl) {
+      <div class="item-image-wrapper">
+        @if (item.url) {
+          <a
+            href="{{ item.affiliateUrl || item.url }}"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="item-image-link"
+          >
+            <img
+              class="item-modal-image"
+              [src]="item.imageUrl"
+              [alt]="item.name"
+              (error)="item.imageUrl = null"
+            />
+          </a>
+        } @else {
+          <img
+            class="item-modal-image"
+            [src]="item.imageUrl"
+            [alt]="item.name"
+            (error)="item.imageUrl = null"
+          />
+        }
+      </div>
+    }
+    @if (item.price) {
+      <div class="item-price-badge">{{ item.price }}</div>
+    }
+    @if (item.details) {
+      <p class="item-details">{{ item.details }}</p>
+    }
   </mat-dialog-content>
 }
 

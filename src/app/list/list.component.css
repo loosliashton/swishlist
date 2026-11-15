@@ -71,7 +71,26 @@
 .item-content {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.item-thumbnail {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background-color: #f5f5f5;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .edit-header-fields {
@@ -110,6 +129,13 @@
   font-size: 18px;
   font-weight: 500;
   color: #333;
+  word-break: break-word;
+}
+
+.item-price {
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
 }
 
 .item-actions {
@@ -157,6 +183,15 @@
 .highlighted .item-name {
   color: #aaa;
   text-decoration: line-through;
+}
+
+.highlighted .item-price {
+  color: #aaa;
+  text-decoration: line-through;
+}
+
+.highlighted .item-thumbnail {
+  opacity: 0.45;
 }
 
 .buttons {

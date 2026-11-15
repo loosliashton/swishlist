@@ -14,10 +14,74 @@
           matInput
           placeholder="Enter a URL..."
           [(ngModel)]="url"
+          (ngModelChange)="onUrlChange($event)"
           (focus)="$event.target.select()"
+          (blur)="onUrlBlur()"
         />
       </mat-form-field>
     </div>
+    @if (fetchingMetadata || imageUrl || price || hasFetchedCurrentUrl) {
+      <div class="metadata-preview">
+        @if (fetchingMetadata) {
+          <div class="metadata-loading">
+            <mat-progress-spinner
+              mode="indeterminate"
+              diameter="16"
+              [strokeWidth]="2"
+            ></mat-progress-spinner>
+            <span>Fetching price &amp; thumbnail...</span>
+          </div>
+        } @else {
+          @if (imageUrl) {
+            <div class="thumbnail-preview-wrapper">
+              <img
+                class="thumbnail-preview"
+                [src]="imageUrl"
+                alt="Item thumbnail preview"
+                (error)="clearThumbnail()"
+              />
+              <button
+                type="button"
+                class="clear-metadata-btn"
+                aria-label="Remove thumbnail"
+                title="Remove thumbnail"
+                (click)="clearThumbnail()"
+              >
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+          }
+          @if (price) {
+            <div class="price-pill">
+              <span class="price-text">{{ price }}</span>
+              <button
+                type="button"
+                class="clear-price-btn"
+                aria-label="Remove price"
+                title="Remove price"
+                (click)="clearPrice()"
+              >
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+          }
+          @if (!imageUrl && !price) {
+            <span class="metadata-empty">No price or thumbnail found</span>
+          }
+          @if (hasValidUrl) {
+            <button
+              type="button"
+              class="refresh-metadata-btn"
+              aria-label="Refresh price and thumbnail"
+              title="Refresh price & thumbnail"
+              (click)="refreshMetadata()"
+            >
+              <i class="fa-solid fa-arrows-rotate"></i>
+            </button>
+          }
+        }
+      </div>
+    }
     <div class="form-field-container">
       <mat-form-field>
         <mat-label>Item details</mat-label>

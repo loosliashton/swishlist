@@ -69,6 +69,43 @@
   padding-top: 4px;
 }
 
+.item-image-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.item-image-link {
+  display: inline-flex;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.item-image-link:hover {
+  opacity: 0.9;
+}
+
+.item-modal-image {
+  max-width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+  border-radius: 10px;
+  background-color: #f8f8f8;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.item-price-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 14px;
+  background-color: rgb(237, 235, 255);
+  color: #3f0099;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
 .item-details {
   margin: 0;
   white-space: pre-line;

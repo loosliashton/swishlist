@@ -1,3 +1,125 @@
 mat-form-field {
   width: 100%;
 }
+
+.metadata-preview {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background-color: #f7f6fb;
+  border: 1px solid rgba(98, 0, 234, 0.12);
+}
+
+.metadata-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #555;
+}
+
+.thumbnail-preview-wrapper {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.thumbnail-preview {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.clear-metadata-btn {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background-color: #444;
+  color: white;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.clear-metadata-btn:hover {
+  background-color: #d32f2f;
+}
+
+.price-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 16px;
+  background-color: rgb(237, 235, 255);
+  color: #3f0099;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.clear-price-btn {
+  border: none;
+  background: transparent;
+  color: #5a3aa8;
+  cursor: pointer;
+  padding: 0;
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 11px;
+}
+
+.clear-price-btn:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+  color: #d32f2f;
+}
+
+.metadata-empty {
+  font-size: 13px;
+  color: #777;
+}
+
+.refresh-metadata-btn {
+  margin-left: auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(98, 0, 234, 0.2);
+  background-color: white;
+  color: #5a3aa8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  font-size: 14px;
+  flex-shrink: 0;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    border-color 0.2s;
+}
+
+.refresh-metadata-btn:hover {
+  background-color: rgb(237, 235, 255);
+  color: #3f0099;
+  border-color: rgba(98, 0, 234, 0.4);
+}

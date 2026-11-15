@@ -651,6 +651,36 @@ export class FirebaseService {
       });
   }
 
+  async getLinkMetadata(url: string): Promise<{
+    price: string | null;
+    imageUrl: string | null;
+    keepaUrl: string | null;
+    affiliateUrl: string | null;
+  }> {
+    const getLinkMetadata = httpsCallable(functions, 'getLinkMetadata');
+
+    return getLinkMetadata({ url })
+      .then((result: any) => {
+        return {
+          price: result?.data?.price ?? null,
+          imageUrl: result?.data?.imageUrl ?? null,
+          keepaUrl: result?.data?.keepaUrl ?? null,
+          affiliateUrl: result?.data?.affiliateUrl ?? null,
+        };
+      })
+      .catch((error) => {
+        console.log(
+          `Error Code: ${error.code}\nMessage: ${error.message}\nDetails: ${error.details}`,
+        );
+        return {
+          price: null,
+          imageUrl: null,
+          keepaUrl: null,
+          affiliateUrl: null,
+        };
+      });
+  }
+
   // Helper Functions
 
   /**
