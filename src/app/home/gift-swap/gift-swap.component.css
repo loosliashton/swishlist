@@ -1,42 +1,46 @@
-.dialog-title {
-  display: flex;
+.title-inner {
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 4px;
+  gap: 14px;
 }
 
-.dialog-title i {
+.title-inner i {
   color: #6200ea;
 }
 
 .dialog-content {
-  min-width: min(420px, 80vw);
-  max-width: 480px;
+  padding-top: 4px !important;
+  box-sizing: border-box;
 }
 
 .subtitle {
-  margin: 0 0 14px 0;
+  margin: 0 0 16px 0;
   font-size: 14px;
   color: #555;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 .input-row {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: stretch;
+  gap: 10px;
 }
 
 .name-field {
   flex: 1;
+  min-width: 0;
 }
 
 .add-btn {
-  height: 48px;
+  height: 56px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   white-space: nowrap;
+}
+
+.add-btn i {
+  margin-right: 6px;
 }
 
 .hint-text {
@@ -173,6 +177,10 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+
+.action-btn i {
+  margin-right: 8px;
 }
 
 .dialog-actions {
