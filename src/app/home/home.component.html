@@ -199,19 +199,24 @@
                 signingIn ? "Signing in..." : "Sign in with Google"
               }}</span>
             </button>
-            <button
-              type="button"
-              class="auth-btn blue-clickable"
-              [ngClass]="{
-                christmas: theme === 'christmas',
-                fall: theme === 'fall',
-              }"
-              (click)="openGiftSwap()"
-            >
-              <i class="fa-solid fa-shuffle"></i>
-              <span>Gift Swap</span>
-            </button>
             <div class="greeting-actions-row center">
+              <button
+                type="button"
+                class="sign-out-link"
+                [ngClass]="{
+                  'white-link': theme === 'christmas' || theme === 'fall',
+                }"
+                (click)="openGiftSwap()"
+              >
+                Gift Swap
+              </button>
+              <span
+                class="greeting-sep"
+                [ngClass]="{
+                  'white-title': theme === 'christmas' || theme === 'fall',
+                }"
+                >·</span
+              >
               <button
                 type="button"
                 class="sign-out-link"

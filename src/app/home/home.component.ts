@@ -242,7 +242,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   openGiftSwap() {
     this.dialog.open(GiftSwapComponent, {
       data: { theme: this.theme },
-      maxWidth: '95vw',
+      width: '440px',
+      maxWidth: '92vw',
     });
   }
 
