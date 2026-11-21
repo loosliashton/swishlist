@@ -17,6 +17,7 @@ import { FirebaseService } from 'src/services/firebase.service';
 import { StorageService } from 'src/services/storage.service';
 import { AddListComponent } from './add-list/add-list.component';
 import { ChangeNameComponent } from './change-name/change-name.component';
+import { GiftSwapComponent } from './gift-swap/gift-swap.component';
 
 type HomeTab = 'my' | 'saved' | 'recent';
 
@@ -236,6 +237,13 @@ export class HomeComponent implements OnInit, OnDestroy {
   openHelp() {
     if (!this.helpDialog) return;
     this.dialog.open(this.helpDialog);
+  }
+
+  openGiftSwap() {
+    this.dialog.open(GiftSwapComponent, {
+      data: { theme: this.theme },
+      maxWidth: '95vw',
+    });
   }
 
   isGiftList(list: List): boolean {

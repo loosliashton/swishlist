@@ -13,6 +13,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { AddListComponent } from './home/add-list/add-list.component';
+import { GiftSwapComponent } from './home/gift-swap/gift-swap.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ListComponent } from './list/list.component';
 import { AddItemComponent } from './list/add-item/add-item.component';
@@ -47,6 +48,7 @@ const routes: Routes = [
     AppComponent,
     HomeComponent,
     AddListComponent,
+    GiftSwapComponent,
     AddItemComponent,
     SpoilerPromptComponent,
     ItemComponent,
