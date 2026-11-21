@@ -1,0 +1,135 @@
+<h2 mat-dialog-title>
+  <span class="title-inner">
+    <i class="fa-solid fa-shuffle"></i>
+    <span>Gift Swap</span>
+  </span>
+</h2>
+
+<mat-dialog-content class="dialog-content">
+  @if (!showResults) {
+    <p class="subtitle">
+      Enter names below to randomly pair everyone in a single gift-giving loop.
+    </p>
+
+    <div class="input-row">
+      <mat-form-field class="name-field" subscriptSizing="dynamic">
+        <mat-label>Participant name</mat-label>
+        <input
+          matInput
+          placeholder="e.g. Alice"
+          [(ngModel)]="newName"
+          (keydown.enter)="$event.preventDefault(); addNamesFromInput()"
+          (paste)="onInputPaste($event)"
+        />
+      </mat-form-field>
+      <button
+        type="button"
+        mat-stroked-button
+        class="add-btn"
+        [disabled]="!newName.trim()"
+        (click)="addNamesFromInput()"
+      >
+        <i class="fa-solid fa-plus"></i>
+        <span>Add</span>
+      </button>
+    </div>
+
+    <p class="hint-text">
+      Tip: Paste multiple names separated by commas or new lines.
+    </p>
+
+    @if (participants.length > 0) {
+      <div class="participants-header">
+        <span class="participants-count">
+          {{ participants.length }}
+          {{ participants.length === 1 ? "person" : "people" }}
+        </span>
+        <button type="button" class="clear-btn" (click)="clearAll()">
+          Clear all
+        </button>
+      </div>
+
+      <div class="participants-list">
+        @for (person of participants; track person; let i = $index) {
+          <div class="participant-chip">
+            <span class="participant-name">{{ person }}</span>
+            <button
+              type="button"
+              class="remove-chip-btn"
+              [attr.aria-label]="'Remove ' + person"
+              (click)="removeParticipant(i)"
+            >
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="empty-state">Add at least 2 names to get started.</div>
+    }
+  } @else {
+    <p class="subtitle">
+      Everyone gives one gift and receives one gift:
+    </p>
+
+    <div class="results-list">
+      @for (pair of pairs; track pair.giver) {
+        <div class="pair-row">
+          <span class="pair-giver">{{ pair.giver }}</span>
+          <i class="fa-solid fa-arrow-right pair-arrow"></i>
+          <span class="pair-receiver">{{ pair.receiver }}</span>
+        </div>
+      }
+    </div>
+
+    <div class="result-actions">
+      <button
+        type="button"
+        mat-stroked-button
+        class="action-btn"
+        (click)="generateSwap()"
+      >
+        <i class="fa-solid fa-shuffle"></i>
+        <span>Shuffle Again</span>
+      </button>
+      <button
+        type="button"
+        mat-stroked-button
+        class="action-btn"
+        (click)="copyResults()"
+      >
+        <i class="fa-solid fa-clipboard"></i>
+        <span>Copy Results</span>
+      </button>
+      @if (canNativeShare) {
+        <button
+          type="button"
+          mat-stroked-button
+          class="action-btn"
+          (click)="shareResults()"
+        >
+          <i class="fa-solid fa-share-nodes"></i>
+          <span>Share</span>
+        </button>
+      }
+    </div>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="dialog-actions">
+  @if (showResults) {
+    <button mat-button type="button" (click)="editNames()">Edit Names</button>
+  }
+  <button mat-button mat-dialog-close type="button">Close</button>
+  @if (!showResults) {
+    <button
+      mat-flat-button
+      color="primary"
+      type="button"
+      [disabled]="participants.length < 2 && !newName.trim()"
+      (click)="generateSwap()"
+    >
+      Generate Swap
+    </button>
+  }
+</mat-dialog-actions>
