@@ -6,6 +6,8 @@ import { Injectable } from '@angular/core';
 export class StorageService {
   private readonly RECENT_LISTS_KEY = 'recentLists';
   private readonly SPOILER_CHOICES_KEY = 'spoilerChoices';
+  private readonly AVAILABILITY_CHECKS_KEY = 'availabilityChecks';
+  readonly AVAILABILITY_CHECK_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 
   constructor() {}
 
@@ -62,5 +64,43 @@ export class StorageService {
   getSpoilerChoice(id: string): boolean | undefined {
     const choices = this.getSpoilerChoices();
     return choices[id];
+  }
+
+  getAvailabilityChecks(): { [listId: string]: number } {
+    try {
+      return JSON.parse(
+        localStorage.getItem(this.AVAILABILITY_CHECKS_KEY) || '{}',
+      );
+    } catch {
+      return {};
+    }
+  }
+
+  getLastAvailabilityCheck(listId: string): number | null {
+    const checks = this.getAvailabilityChecks();
+    const timestamp = checks[listId];
+    return typeof timestamp === 'number' && !isNaN(timestamp)
+      ? timestamp
+      : null;
+  }
+
+  recordAvailabilityCheck(listId: string, timestamp: number = Date.now()): void {
+    const checks = this.getAvailabilityChecks();
+    checks[listId] = timestamp;
+    localStorage.setItem(this.AVAILABILITY_CHECKS_KEY, JSON.stringify(checks));
+  }
+
+  getAvailabilityCheckCooldownRemainingMs(
+    listId: string,
+    now: number = Date.now(),
+  ): number {
+    const lastCheck = this.getLastAvailabilityCheck(listId);
+    if (lastCheck === null) return 0;
+    const elapsed = now - lastCheck;
+    return Math.max(0, this.AVAILABILITY_CHECK_COOLDOWN_MS - elapsed);
+  }
+
+  canCheckAvailability(listId: string, now: number = Date.now()): boolean {
+    return this.getAvailabilityCheckCooldownRemainingMs(listId, now) === 0;
   }
 }

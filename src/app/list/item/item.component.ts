@@ -25,6 +25,7 @@ export class ItemComponent {
   isOwner: boolean = false;
   @Output() copiedListEvent = new EventEmitter<string>();
   @Output() editItemEvent = new EventEmitter<void>();
+  @Output() removeItemEvent = new EventEmitter<void>();
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: any,
@@ -51,7 +52,7 @@ export class ItemComponent {
 
   openRevealPurchaseModal() {
     if (!this.isOwner || this.isGeneralList) return;
-    this.dialog.open(RevealPurchaseComponent, {
+    const revealDialogRef = this.dialog.open(RevealPurchaseComponent, {
       data: {
         item: this.item,
         listId: this.listId,
@@ -59,6 +60,13 @@ export class ItemComponent {
       },
       width: '90vw',
       maxWidth: '420px',
+    });
+
+    revealDialogRef?.afterClosed().subscribe((result) => {
+      if (result === 'remove') {
+        this.removeItemEvent.emit();
+        this.dialogRef.close();
+      }
     });
   }
 

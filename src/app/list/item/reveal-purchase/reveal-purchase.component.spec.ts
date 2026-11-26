@@ -8,6 +8,7 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { Item } from 'src/models/item';
 import { FirebaseService } from 'src/services/firebase.service';
+import { StorageService } from 'src/services/storage.service';
 
 import {
   RevealPurchaseComponent,
@@ -18,10 +19,20 @@ describe('RevealPurchaseComponent', () => {
   let component: RevealPurchaseComponent;
   let fixture: ComponentFixture<RevealPurchaseComponent>;
   let firebaseSpy: jasmine.SpyObj<FirebaseService>;
+  let storageSpy: jasmine.SpyObj<StorageService>;
+  let dialogRefSpy: jasmine.SpyObj<MatDialogRef<RevealPurchaseComponent>>;
   let dialogData: RevealPurchaseDialogData;
 
-  beforeEach(async () => {
+  async function setup(cooldownRemainingMs = 0) {
     firebaseSpy = jasmine.createSpyObj('FirebaseService', ['getList']);
+    storageSpy = jasmine.createSpyObj('StorageService', [
+      'getAvailabilityCheckCooldownRemainingMs',
+      'recordAvailabilityCheck',
+    ]);
+    storageSpy.getAvailabilityCheckCooldownRemainingMs.and.returnValue(
+      cooldownRemainingMs,
+    );
+    dialogRefSpy = jasmine.createSpyObj('MatDialogRef', ['close']);
     dialogData = {
       item: {
         name: 'Coffee Grinder',
@@ -37,26 +48,43 @@ describe('RevealPurchaseComponent', () => {
       declarations: [RevealPurchaseComponent],
       imports: [NoopAnimationsModule, MatDialogModule, MatButtonModule],
       providers: [
-        { provide: MatDialogRef, useValue: { close: jasmine.createSpy('close') } },
+        { provide: MatDialogRef, useValue: dialogRefSpy },
         { provide: MAT_DIALOG_DATA, useValue: dialogData },
         { provide: FirebaseService, useValue: firebaseSpy },
+        { provide: StorageService, useValue: storageSpy },
       ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(RevealPurchaseComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  }
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
   });
 
-  it('should start in confirm state without revealing purchase status', () => {
+  it('should start in confirm state without revealing purchase status when not on cooldown', async () => {
+    await setup(0);
     expect(component.step).toBe('confirm');
     expect(firebaseSpy.getList).not.toHaveBeenCalled();
     const text = fixture.nativeElement.textContent;
-    expect(text).toContain('Reveal Purchase Status?');
+    expect(text).toContain('Buying This Yourself?');
     expect(text).toContain('Coffee Grinder');
+    expect(text).toContain('one item per day');
   });
 
-  it('should fetch latest list on confirmReveal and show purchased status', async () => {
+  it('should start in cooldown state when a check was already used within 24 hours', async () => {
+    await setup(3 * 60 * 60 * 1000 + 15 * 60 * 1000);
+    expect(component.step).toBe('cooldown');
+    expect(firebaseSpy.getList).not.toHaveBeenCalled();
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('Daily Check Used');
+    expect(text).toContain('3 hours and 15 minutes');
+  });
+
+  it('should fetch latest list on confirmReveal, record cooldown, and show hold-off message when purchased', async () => {
+    await setup(0);
     const freshItem: Item = { ...dialogData.item, purchased: true };
     firebaseSpy.getList.and.resolveTo({
       id: 'list-1',
@@ -69,15 +97,18 @@ describe('RevealPurchaseComponent', () => {
     fixture.detectChanges();
 
     expect(firebaseSpy.getList).toHaveBeenCalledWith('list-1');
+    expect(storageSpy.recordAvailabilityCheck).toHaveBeenCalledWith('list-1');
     expect(component.step).toBe('revealed');
     expect(component.purchased).toBeTrue();
     expect(dialogData.item.purchased).toBeTrue();
-    expect(fixture.nativeElement.textContent).toContain(
-      'has been marked as purchased!',
-    );
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('Hold Off on This One');
+    expect(text).toContain('skip buying it yourself');
+    expect(fixture.nativeElement.querySelector('.remove-item-btn')).toBeNull();
   });
 
-  it('should show not purchased when fresh item is not purchased', async () => {
+  it('should prompt user to remove item from list when not purchased', async () => {
+    await setup(0);
     firebaseSpy.getList.and.resolveTo({
       id: 'list-1',
       name: 'Birthday',
@@ -88,21 +119,33 @@ describe('RevealPurchaseComponent', () => {
     await component.confirmReveal();
     fixture.detectChanges();
 
+    expect(storageSpy.recordAvailabilityCheck).toHaveBeenCalledWith('list-1');
     expect(component.step).toBe('revealed');
     expect(component.purchased).toBeFalse();
-    expect(fixture.nativeElement.textContent).toContain(
-      'has not been marked as purchased yet.',
-    );
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('All Clear — Safe to Buy!');
+    expect(text).toContain('Remove it from your list now');
+
+    const removeBtn: HTMLButtonElement | null =
+      fixture.nativeElement.querySelector('.remove-item-btn');
+    expect(removeBtn).toBeTruthy();
+    removeBtn!.click();
+
+    expect(dialogRefSpy.close).toHaveBeenCalledWith('remove');
   });
 
-  it('should transition to error state on failure and allow retrying', async () => {
+  it('should not consume cooldown on error and should allow retrying', async () => {
+    await setup(0);
     firebaseSpy.getList.and.rejectWith(new Error('Network error'));
 
     await component.confirmReveal();
     fixture.detectChanges();
 
     expect(component.step).toBe('error');
-    expect(fixture.nativeElement.textContent).toContain("Couldn't Check Status");
+    expect(storageSpy.recordAvailabilityCheck).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.textContent).toContain(
+      "Couldn't Check Availability",
+    );
 
     firebaseSpy.getList.and.resolveTo({
       id: 'list-1',
@@ -116,5 +159,6 @@ describe('RevealPurchaseComponent', () => {
 
     expect(component.step).toBe('revealed');
     expect(component.purchased).toBeTrue();
+    expect(storageSpy.recordAvailabilityCheck).toHaveBeenCalledWith('list-1');
   });
 });

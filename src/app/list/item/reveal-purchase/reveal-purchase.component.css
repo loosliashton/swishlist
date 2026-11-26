@@ -9,11 +9,15 @@
 }
 
 .title-inner.purchased-title i {
-  color: #2e7d32;
+  color: #5c6bc0;
 }
 
 .title-inner.not-purchased-title i {
-  color: #5c6bc0;
+  color: #2e7d32;
+}
+
+.title-inner.cooldown-title i {
+  color: #757575;
 }
 
 .title-inner.error-title i {
@@ -53,13 +57,13 @@
 }
 
 .result-banner.purchased {
-  background-color: #edf7ed;
-  border-color: #c8e6c9;
+  background-color: #f5f6ff;
+  border-color: #dce0ff;
 }
 
 .result-banner.not-purchased {
-  background-color: #f5f6ff;
-  border-color: #dce0ff;
+  background-color: #edf7ed;
+  border-color: #c8e6c9;
 }
 
 .result-text {
@@ -68,6 +72,17 @@
   color: #222;
   line-height: 1.45;
   word-break: break-word;
+}
+
+.remove-prompt {
+  margin: 12px 0 0 0;
+  font-size: 13px;
+  color: #555;
+  line-height: 1.45;
+}
+
+.remove-item-btn i {
+  margin-right: 6px;
 }
 
 .dialog-actions {

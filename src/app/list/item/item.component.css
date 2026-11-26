@@ -109,21 +109,33 @@
 .reveal-footer {
   display: flex;
   justify-content: center;
-  padding: 8px 24px 14px;
-  border-top: 1px solid #eeeeee;
+  padding: 6px 24px 12px;
+  border-top: 1px solid #f2f2f2;
 }
 
 .reveal-btn {
-  color: #666;
-  font-size: 0.875rem;
+  background: transparent;
+  border: none;
+  padding: 4px 8px;
+  color: #888;
+  font-size: 0.8rem;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color 0.15s ease;
+}
+
+.reveal-link {
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .reveal-btn:hover {
-  color: #3f51b5;
+  color: #555;
 }
 
-.reveal-btn i {
-  margin-right: 6px;
+.reveal-btn:hover .reveal-link {
+  color: #3f51b5;
 }
 
 @media (max-width: 600px) {

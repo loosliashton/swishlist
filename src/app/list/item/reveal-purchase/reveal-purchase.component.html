@@ -1,17 +1,42 @@
-@if (step === 'confirm') {
+@if (step === 'cooldown') {
   <h2 mat-dialog-title>
-    <span class="title-inner">
-      <i class="fa-solid fa-eye"></i>
-      <span>Reveal Purchase Status?</span>
+    <span class="title-inner cooldown-title">
+      <i class="fa-solid fa-clock"></i>
+      <span>Daily Check Used</span>
     </span>
   </h2>
   <mat-dialog-content class="dialog-content">
     <p class="message">
-      Are you sure you want to spoil the surprise and check whether
-      <strong>{{ data.item.name }}</strong> has been purchased?
+      To keep your wishlist spoiler-free, you can check one item per day on this
+      list.
     </p>
     <p class="sub-note">
-      This is a one-time popup and won't change your list view.
+      You can check another item in
+      <strong>{{ cooldownRemainingText }}</strong
+      >.
+    </p>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end" class="dialog-actions">
+    <button mat-flat-button color="primary" mat-dialog-close type="button">
+      Got It
+    </button>
+  </mat-dialog-actions>
+} @else if (step === 'confirm') {
+  <h2 mat-dialog-title>
+    <span class="title-inner">
+      <i class="fa-solid fa-bag-shopping"></i>
+      <span>Buying This Yourself?</span>
+    </span>
+  </h2>
+  <mat-dialog-content class="dialog-content">
+    <p class="message">
+      We'll check if anyone has already picked up
+      <strong>{{ data.item.name }}</strong> for you so you don't end up with a
+      duplicate.
+    </p>
+    <p class="sub-note">
+      You can check one item per day on this list to keep the rest of your
+      surprises intact.
     </p>
   </mat-dialog-content>
   <mat-dialog-actions align="end" class="dialog-actions">
@@ -22,14 +47,14 @@
       type="button"
       (click)="confirmReveal()"
     >
-      Yes, Reveal
+      Check Availability
     </button>
   </mat-dialog-actions>
 } @else if (step === 'loading') {
   <h2 mat-dialog-title>
     <span class="title-inner">
-      <i class="fa-solid fa-eye"></i>
-      <span>Checking Status...</span>
+      <i class="fa-solid fa-bag-shopping"></i>
+      <span>Checking Availability...</span>
     </span>
   </h2>
   <mat-dialog-content class="dialog-content loading-content">
@@ -39,12 +64,13 @@
   <h2 mat-dialog-title>
     <span class="title-inner error-title">
       <i class="fa-solid fa-circle-exclamation"></i>
-      <span>Couldn't Check Status</span>
+      <span>Couldn't Check Availability</span>
     </span>
   </h2>
   <mat-dialog-content class="dialog-content">
     <p class="message">
-      We couldn't fetch the latest purchase status right now. Please try again.
+      We couldn't check right now. Your daily check hasn't been used — please
+      try again.
     </p>
   </mat-dialog-content>
   <mat-dialog-actions align="end" class="dialog-actions">
@@ -67,10 +93,12 @@
     >
       <i
         class="fa-solid"
-        [class.fa-circle-check]="purchased"
-        [class.fa-gift]="!purchased"
+        [class.fa-gift]="purchased"
+        [class.fa-circle-check]="!purchased"
       ></i>
-      <span>{{ purchased ? 'Purchased' : 'Not Purchased' }}</span>
+      <span>{{
+        purchased ? 'Hold Off on This One' : 'All Clear — Safe to Buy!'
+      }}</span>
     </span>
   </h2>
   <mat-dialog-content class="dialog-content">
@@ -81,17 +109,37 @@
     >
       <p class="result-text">
         @if (purchased) {
-          <strong>{{ data.item.name }}</strong> has been marked as purchased!
+          Someone already has <strong>{{ data.item.name }}</strong> covered for
+          you — skip buying it yourself!
         } @else {
-          <strong>{{ data.item.name }}</strong> has not been marked as
-          purchased yet.
+          <strong>{{ data.item.name }}</strong> hasn't been purchased yet.
         }
       </p>
     </div>
+    @if (!purchased) {
+      <p class="remove-prompt">
+        Planning to buy it yourself? Remove it from your list now so nobody
+        accidentally buys you a duplicate.
+      </p>
+    }
   </mat-dialog-content>
   <mat-dialog-actions align="end" class="dialog-actions">
-    <button mat-flat-button color="primary" mat-dialog-close type="button">
-      Got It
-    </button>
+    @if (purchased) {
+      <button mat-flat-button color="primary" mat-dialog-close type="button">
+        Got It
+      </button>
+    } @else {
+      <button mat-button mat-dialog-close type="button">Keep on List</button>
+      <button
+        mat-flat-button
+        color="warn"
+        type="button"
+        class="remove-item-btn"
+        (click)="removeFromList()"
+      >
+        <i class="fa-solid fa-trash-can"></i>
+        Remove from My List
+      </button>
+    }
   </mat-dialog-actions>
 }
