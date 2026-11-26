@@ -300,6 +300,7 @@ export class ListComponent implements OnInit, OnDestroy {
       },
       width: '90vw',
       maxWidth: '500px',
+      autoFocus: 'dialog',
     });
 
     let copiedSub: Subscription | undefined;
