@@ -30,7 +30,10 @@
   </mat-dialog-content>
 }
 
-<mat-dialog-actions class="item-actions">
+<mat-dialog-actions
+  class="item-actions"
+  [class.has-reveal-footer]="isOwner && !isGeneralList"
+>
   @if ((!isGeneralList && spoilers) || (isGeneralList && isOwner)) {
     <button
       mat-flat-button
@@ -89,3 +92,17 @@
     </button>
   </div>
 </mat-dialog-actions>
+
+@if (isOwner && !isGeneralList) {
+  <div class="reveal-footer">
+    <button
+      type="button"
+      mat-button
+      class="reveal-btn"
+      (click)="openRevealPurchaseModal()"
+    >
+      <i class="fa-solid fa-eye"></i>
+      Reveal if Purchased
+    </button>
+  </div>
+}

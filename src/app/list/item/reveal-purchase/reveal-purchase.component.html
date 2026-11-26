@@ -1,0 +1,97 @@
+@if (step === 'confirm') {
+  <h2 mat-dialog-title>
+    <span class="title-inner">
+      <i class="fa-solid fa-eye"></i>
+      <span>Reveal Purchase Status?</span>
+    </span>
+  </h2>
+  <mat-dialog-content class="dialog-content">
+    <p class="message">
+      Are you sure you want to spoil the surprise and check whether
+      <strong>{{ data.item.name }}</strong> has been purchased?
+    </p>
+    <p class="sub-note">
+      This is a one-time popup and won't change your list view.
+    </p>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end" class="dialog-actions">
+    <button mat-button mat-dialog-close type="button">Cancel</button>
+    <button
+      mat-flat-button
+      color="primary"
+      type="button"
+      (click)="confirmReveal()"
+    >
+      Yes, Reveal
+    </button>
+  </mat-dialog-actions>
+} @else if (step === 'loading') {
+  <h2 mat-dialog-title>
+    <span class="title-inner">
+      <i class="fa-solid fa-eye"></i>
+      <span>Checking Status...</span>
+    </span>
+  </h2>
+  <mat-dialog-content class="dialog-content loading-content">
+    <div class="spinner"></div>
+  </mat-dialog-content>
+} @else if (step === 'error') {
+  <h2 mat-dialog-title>
+    <span class="title-inner error-title">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      <span>Couldn't Check Status</span>
+    </span>
+  </h2>
+  <mat-dialog-content class="dialog-content">
+    <p class="message">
+      We couldn't fetch the latest purchase status right now. Please try again.
+    </p>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end" class="dialog-actions">
+    <button mat-button mat-dialog-close type="button">Close</button>
+    <button
+      mat-flat-button
+      color="primary"
+      type="button"
+      (click)="confirmReveal()"
+    >
+      Try Again
+    </button>
+  </mat-dialog-actions>
+} @else {
+  <h2 mat-dialog-title>
+    <span
+      class="title-inner"
+      [class.purchased-title]="purchased"
+      [class.not-purchased-title]="!purchased"
+    >
+      <i
+        class="fa-solid"
+        [class.fa-circle-check]="purchased"
+        [class.fa-gift]="!purchased"
+      ></i>
+      <span>{{ purchased ? 'Purchased' : 'Not Purchased' }}</span>
+    </span>
+  </h2>
+  <mat-dialog-content class="dialog-content">
+    <div
+      class="result-banner"
+      [class.purchased]="purchased"
+      [class.not-purchased]="!purchased"
+    >
+      <p class="result-text">
+        @if (purchased) {
+          <strong>{{ data.item.name }}</strong> has been marked as purchased!
+        } @else {
+          <strong>{{ data.item.name }}</strong> has not been marked as
+          purchased yet.
+        }
+      </p>
+    </div>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end" class="dialog-actions">
+    <button mat-flat-button color="primary" mat-dialog-close type="button">
+      Got It
+    </button>
+  </mat-dialog-actions>
+}

@@ -19,6 +19,7 @@ import { ListComponent } from './list/list.component';
 import { AddItemComponent } from './list/add-item/add-item.component';
 import { SpoilerPromptComponent } from './list/spoiler-prompt/spoiler-prompt.component';
 import { ItemComponent } from './list/item/item.component';
+import { RevealPurchaseComponent } from './list/item/reveal-purchase/reveal-purchase.component';
 import { ChangeNameComponent } from './home/change-name/change-name.component';
 import { SuggestionsComponent } from './list/suggestions/suggestions.component';
 import { ShareComponent } from './list/share/share.component';
@@ -52,6 +53,7 @@ const routes: Routes = [
     AddItemComponent,
     SpoilerPromptComponent,
     ItemComponent,
+    RevealPurchaseComponent,
     ChangeNameComponent,
     SuggestionsComponent,
     ShareComponent,

@@ -288,11 +288,12 @@ export class ListComponent implements OnInit, OnDestroy {
     }
   }
 
-  openItemModal(item: Item) {
+  openItemModal(item: Item, itemIndex?: number) {
     const dialogRef = this.dialog.open(ItemComponent, {
       data: {
         item: item,
         listId: this.list!.id,
+        itemIndex: itemIndex,
         spoilers: this.spoilers,
         isGeneralList: !this.isGiftList,
         isOwner: this.isOwner,

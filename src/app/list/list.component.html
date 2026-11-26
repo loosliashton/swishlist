@@ -155,7 +155,7 @@
                 highlighted: (isGiftList ? spoilers : true) && item.purchased,
                 editing: editing,
               }"
-              (click)="editing ? null : openItemModal(item)"
+              (click)="editing ? null : openItemModal(item, i)"
             >
               <div class="item-content">
                 @if (!isGiftList) {

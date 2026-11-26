@@ -102,6 +102,30 @@
   margin-right: 6px;
 }
 
+.item-actions.has-reveal-footer {
+  padding-bottom: 12px;
+}
+
+.reveal-footer {
+  display: flex;
+  justify-content: center;
+  padding: 8px 24px 14px;
+  border-top: 1px solid #eeeeee;
+}
+
+.reveal-btn {
+  color: #666;
+  font-size: 0.875rem;
+}
+
+.reveal-btn:hover {
+  color: #3f51b5;
+}
+
+.reveal-btn i {
+  margin-right: 6px;
+}
+
 @media (max-width: 600px) {
   .item-dialog-header {
     padding: 14px 12px 6px 20px;
@@ -113,6 +137,14 @@
     align-items: stretch;
     gap: 10px;
     padding: 12px 20px 20px;
+  }
+
+  .item-actions.has-reveal-footer {
+    padding-bottom: 12px;
+  }
+
+  .reveal-footer {
+    padding: 8px 20px 14px;
   }
 
   .primary-action-btn {
