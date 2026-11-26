@@ -16,7 +16,6 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { AddItemComponent } from '../../add-item/add-item.component';
 import { RecentListsModalFunctionality } from './recent-lists-modal-functionality.enum';
 import { User } from 'src/models/user';
-import { StorageService } from 'src/services/storage.service';
 
 @Component({
   selector: 'app-recent-lists-modal',
@@ -48,7 +47,6 @@ export class RecentListsModalComponent implements OnInit {
       functionality: RecentListsModalFunctionality;
       currentListId?: string;
     },
-    private storageService: StorageService,
   ) {
     this.item = data.item;
     this.currentListId = data.currentListId || null;
@@ -75,31 +73,41 @@ export class RecentListsModalComponent implements OnInit {
     this.loading = true;
     this.needsAuth = false;
 
+    const user = await this.firebase.waitForAuthReady();
+
     if (this.isNavigateMode) {
-      const sortedIds = this.storageService.getSortedRecentListIds();
+      let activeUser = user;
+      if (user) {
+        try {
+          activeUser = (await this.firebase.refreshCurrentUser()) ?? user;
+        } catch (error) {
+          console.error('Error refreshing user for recent lists:', error);
+        }
+      }
+
+      const sortedIds = this.firebase
+        .getSortedRecentListIds(activeUser)
+        .filter((id) => id !== this.currentListId);
       if (!sortedIds.length) {
         this.recentListItems = [];
         this.loading = false;
         return;
       }
 
-      this.recentListItems = await this.firebase.getListsWithCreators(
-        sortedIds.slice(0, 10),
-      );
+      const topIds = sortedIds.slice(0, 10);
+      const items = await this.firebase.getListsWithCreators(topIds);
+      this.recentListItems = items;
 
-      // Filter out the current list
-      const index = this.recentListItems.findIndex(
-        (item) => item.list.id === this.currentListId,
-      );
-      if (index !== -1) {
-        this.recentListItems.splice(index, 1);
+      const foundIds = new Set(items.map((item) => item.list.id));
+      const missingIds = topIds.filter((id) => !foundIds.has(id));
+      if (missingIds.length) {
+        void this.firebase.removeRecentLists(missingIds);
       }
 
       this.loading = false;
       return;
     }
 
-    const user = await this.firebase.waitForAuthReady();
     if (!user) {
       this.needsAuth = true;
       this.loading = false;

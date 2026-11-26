@@ -12,7 +12,14 @@ export class StorageService {
   constructor() {}
 
   getRecentLists(): { [id: string]: string } {
-    return JSON.parse(localStorage.getItem(this.RECENT_LISTS_KEY) || '{}');
+    try {
+      const parsed = JSON.parse(localStorage.getItem(this.RECENT_LISTS_KEY) || '{}');
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+        ? parsed
+        : {};
+    } catch {
+      return {};
+    }
   }
 
   addRecentList(id: string): void {
@@ -29,17 +36,33 @@ export class StorageService {
     }
   }
 
-  getSortedRecentListIds(): string[] {
-    const recentListsObject = this.getRecentLists();
-    return Object.keys(recentListsObject).sort((a, b) => {
-      const dateA = new Date(recentListsObject[a]);
-      const dateB = new Date(recentListsObject[b]);
-      return dateB.getTime() - dateA.getTime();
+  clearRecentLists(): void {
+    localStorage.removeItem(this.RECENT_LISTS_KEY);
+  }
+
+  sortRecentListIds(recentLists: { [id: string]: string }): string[] {
+    return Object.keys(recentLists).sort((a, b) => {
+      const timeA = new Date(recentLists[a]).getTime() || 0;
+      const timeB = new Date(recentLists[b]).getTime() || 0;
+      return timeB - timeA;
     });
   }
 
+  getSortedRecentListIds(): string[] {
+    return this.sortRecentListIds(this.getRecentLists());
+  }
+
   getSpoilerChoices(): { [id: string]: boolean } {
-    return JSON.parse(localStorage.getItem(this.SPOILER_CHOICES_KEY) || '{}');
+    try {
+      const parsed = JSON.parse(
+        localStorage.getItem(this.SPOILER_CHOICES_KEY) || '{}',
+      );
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+        ? parsed
+        : {};
+    } catch {
+      return {};
+    }
   }
 
   setSpoilerChoice(id: string, choice: boolean): void {

@@ -6,4 +6,5 @@ export interface User {
   normalizedEmail?: string;
   lists?: string[]; // IDs
   savedLists?: string[]; // IDs
+  recentLists?: { [id: string]: string }; // listId -> ISO timestamp
 }
