@@ -372,6 +372,7 @@ export class FirebaseService {
       type,
       creatorID: user.id!,
       items: [],
+      lastModified: new Date().toISOString(),
       ...(user.uid ? { creatorUid: user.uid } : {}),
     };
     const listsCol = collection(db, this.LISTS_COL);
@@ -405,8 +406,10 @@ export class FirebaseService {
         list.creatorUid = this.currentUser.uid;
       }
       const listDocRef = doc(db, this.LISTS_COL, list.id!);
+      const lastModified = new Date().toISOString();
       const { id, ...listData } = list;
-      await updateDoc(listDocRef, listData as any);
+      await updateDoc(listDocRef, { ...listData, lastModified } as any);
+      list.lastModified = lastModified;
       this.cacheList(list);
       return true;
     } catch (error) {
@@ -415,13 +418,25 @@ export class FirebaseService {
     }
   }
 
-  async updateListItems(listId: string, items: Item[]): Promise<boolean> {
+  async updateListItems(
+    listId: string,
+    items: Item[],
+    updateLastModified: boolean = false,
+  ): Promise<boolean> {
     try {
       const listDocRef = doc(db, this.LISTS_COL, listId);
-      await updateDoc(listDocRef, { items });
+      const lastModified = updateLastModified
+        ? new Date().toISOString()
+        : undefined;
+      const payload = lastModified ? { items, lastModified } : { items };
+      await updateDoc(listDocRef, payload);
       const cached = this.listCache.get(listId);
       if (cached) {
-        this.cacheList({ ...cached, items });
+        this.cacheList({
+          ...cached,
+          items,
+          ...(lastModified ? { lastModified } : {}),
+        });
       }
       return true;
     } catch (error) {

@@ -62,6 +62,63 @@ export class ListComponent implements OnInit, OnDestroy {
     );
   }
 
+  get showLastModified(): boolean {
+    return !this.loading && !this.isOwner && !!this.lastModifiedText;
+  }
+
+  get lastModifiedText(): string | null {
+    return this.formatLastModified(this.list?.lastModified);
+  }
+
+  get lastModifiedTooltip(): string | null {
+    if (!this.list?.lastModified) return null;
+    const date = new Date(this.list.lastModified);
+    if (isNaN(date.getTime())) return null;
+    return date.toLocaleString(undefined, {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
+  }
+
+  formatLastModified(
+    isoString?: string,
+    now: Date = new Date(),
+  ): string | null {
+    if (!isoString) return null;
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return null;
+
+    const diffMs = now.getTime() - date.getTime();
+    const minuteMs = 60_000;
+    const hourMs = 3_600_000;
+    const dayMs = 86_400_000;
+
+    if (diffMs < minuteMs) {
+      return 'Last updated just now';
+    }
+    if (diffMs < hourMs) {
+      const minutes = Math.floor(diffMs / minuteMs);
+      return `Last updated ${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
+    }
+    if (diffMs < dayMs) {
+      const hours = Math.floor(diffMs / hourMs);
+      return `Last updated ${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+    }
+    if (diffMs < 7 * dayMs) {
+      const days = Math.floor(diffMs / dayMs);
+      return days === 1
+        ? 'Last updated yesterday'
+        : `Last updated ${days} days ago`;
+    }
+
+    const formatted = date.toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+    return `Last updated ${formatted}`;
+  }
+
   async ngOnInit() {
     this.subscriptions.push(
       this.firebase.currentUser$.subscribe((user) => {
@@ -229,15 +286,23 @@ export class ListComponent implements OnInit, OnDestroy {
   async saveItemsOnly() {
     if (!this.list?.id) return;
     this.saveListLoading = true;
+    const isOwner = this.isOwner;
     if (
       !(await this.firebase.updateListItems(
         this.list.id,
         this.list.items ?? [],
+        isOwner,
       ))
     ) {
       this.snackbar.open('Error updating item', 'Close', { duration: 3000 });
       await this.getList(this.list.id);
     } else {
+      if (isOwner) {
+        const cached = this.firebase.getCachedListsFromIds([this.list.id])?.[0];
+        if (cached?.lastModified) {
+          this.list.lastModified = cached.lastModified;
+        }
+      }
       this.snackbar.open('List updated', 'Close', { duration: 3000 });
     }
     this.saveListLoading = false;

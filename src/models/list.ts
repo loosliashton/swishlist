@@ -11,4 +11,5 @@ export interface List {
   creatorUid?: string;
   shortUrl?: string;
   ideas?: string;
+  lastModified?: string;
 }
