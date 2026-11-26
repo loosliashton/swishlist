@@ -23,15 +23,13 @@ describe('RevealPurchaseComponent', () => {
   let dialogRefSpy: jasmine.SpyObj<MatDialogRef<RevealPurchaseComponent>>;
   let dialogData: RevealPurchaseDialogData;
 
-  async function setup(cooldownRemainingMs = 0) {
+  async function setup(canCheckToday = true) {
     firebaseSpy = jasmine.createSpyObj('FirebaseService', ['getList']);
     storageSpy = jasmine.createSpyObj('StorageService', [
-      'getAvailabilityCheckCooldownRemainingMs',
+      'canCheckAvailability',
       'recordAvailabilityCheck',
     ]);
-    storageSpy.getAvailabilityCheckCooldownRemainingMs.and.returnValue(
-      cooldownRemainingMs,
-    );
+    storageSpy.canCheckAvailability.and.returnValue(canCheckToday);
     dialogRefSpy = jasmine.createSpyObj('MatDialogRef', ['close']);
     dialogData = {
       item: {
@@ -64,8 +62,8 @@ describe('RevealPurchaseComponent', () => {
     TestBed.resetTestingModule();
   });
 
-  it('should start in confirm state without revealing purchase status when not on cooldown', async () => {
-    await setup(0);
+  it('should start in confirm state without revealing purchase status when not locked out today', async () => {
+    await setup(true);
     expect(component.step).toBe('confirm');
     expect(firebaseSpy.getList).not.toHaveBeenCalled();
     const text = fixture.nativeElement.textContent;
@@ -74,17 +72,17 @@ describe('RevealPurchaseComponent', () => {
     expect(text).toContain('one item per day');
   });
 
-  it('should start in cooldown state when a check was already used within 24 hours', async () => {
-    await setup(3 * 60 * 60 * 1000 + 15 * 60 * 1000);
+  it('should start in cooldown state when a check was already used today', async () => {
+    await setup(false);
     expect(component.step).toBe('cooldown');
     expect(firebaseSpy.getList).not.toHaveBeenCalled();
     const text = fixture.nativeElement.textContent;
     expect(text).toContain('Daily Check Used');
-    expect(text).toContain('3 hours and 15 minutes');
+    expect(text).toContain('Come back tomorrow');
   });
 
   it('should fetch latest list on confirmReveal, record cooldown, and show hold-off message when purchased', async () => {
-    await setup(0);
+    await setup(true);
     const freshItem: Item = { ...dialogData.item, purchased: true };
     firebaseSpy.getList.and.resolveTo({
       id: 'list-1',
@@ -108,7 +106,7 @@ describe('RevealPurchaseComponent', () => {
   });
 
   it('should prompt user to remove item from list when not purchased', async () => {
-    await setup(0);
+    await setup(true);
     firebaseSpy.getList.and.resolveTo({
       id: 'list-1',
       name: 'Birthday',
@@ -135,7 +133,7 @@ describe('RevealPurchaseComponent', () => {
   });
 
   it('should not consume cooldown on error and should allow retrying', async () => {
-    await setup(0);
+    await setup(true);
     firebaseSpy.getList.and.rejectWith(new Error('Network error'));
 
     await component.confirmReveal();

@@ -7,7 +7,6 @@ export class StorageService {
   private readonly RECENT_LISTS_KEY = 'recentLists';
   private readonly SPOILER_CHOICES_KEY = 'spoilerChoices';
   private readonly AVAILABILITY_CHECKS_KEY = 'availabilityChecks';
-  readonly AVAILABILITY_CHECK_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 
   constructor() {}
 
@@ -89,41 +88,45 @@ export class StorageService {
     return choices[id];
   }
 
-  getAvailabilityChecks(): { [listId: string]: number } {
+  private getLocalDateKey(date: Date = new Date()): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  getAvailabilityChecks(): { [listId: string]: string | number } {
     try {
-      return JSON.parse(
+      const parsed = JSON.parse(
         localStorage.getItem(this.AVAILABILITY_CHECKS_KEY) || '{}',
       );
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+        ? parsed
+        : {};
     } catch {
       return {};
     }
   }
 
-  getLastAvailabilityCheck(listId: string): number | null {
+  getLastAvailabilityCheckDate(listId: string): string | null {
     const checks = this.getAvailabilityChecks();
-    const timestamp = checks[listId];
-    return typeof timestamp === 'number' && !isNaN(timestamp)
-      ? timestamp
-      : null;
+    const value = checks[listId];
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      return value;
+    }
+    if (typeof value === 'number' && !isNaN(value)) {
+      return this.getLocalDateKey(new Date(value));
+    }
+    return null;
   }
 
-  recordAvailabilityCheck(listId: string, timestamp: number = Date.now()): void {
+  recordAvailabilityCheck(listId: string, date: Date = new Date()): void {
     const checks = this.getAvailabilityChecks();
-    checks[listId] = timestamp;
+    checks[listId] = this.getLocalDateKey(date);
     localStorage.setItem(this.AVAILABILITY_CHECKS_KEY, JSON.stringify(checks));
   }
 
-  getAvailabilityCheckCooldownRemainingMs(
-    listId: string,
-    now: number = Date.now(),
-  ): number {
-    const lastCheck = this.getLastAvailabilityCheck(listId);
-    if (lastCheck === null) return 0;
-    const elapsed = now - lastCheck;
-    return Math.max(0, this.AVAILABILITY_CHECK_COOLDOWN_MS - elapsed);
-  }
-
-  canCheckAvailability(listId: string, now: number = Date.now()): boolean {
-    return this.getAvailabilityCheckCooldownRemainingMs(listId, now) === 0;
+  canCheckAvailability(listId: string, now: Date = new Date()): boolean {
+    return this.getLastAvailabilityCheckDate(listId) !== this.getLocalDateKey(now);
   }
 }

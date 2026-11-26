@@ -21,7 +21,6 @@ export type RevealPurchaseDialogResult = 'remove' | undefined;
 export class RevealPurchaseComponent {
   step: 'cooldown' | 'confirm' | 'loading' | 'revealed' | 'error' = 'confirm';
   purchased: boolean = false;
-  cooldownRemainingText: string = '';
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: RevealPurchaseDialogData,
@@ -33,15 +32,11 @@ export class RevealPurchaseComponent {
     private storageService: StorageService,
     private cdr: ChangeDetectorRef,
   ) {
-    if (this.data.listId) {
-      const remainingMs =
-        this.storageService.getAvailabilityCheckCooldownRemainingMs(
-          this.data.listId,
-        );
-      if (remainingMs > 0) {
-        this.cooldownRemainingText = this.formatRemainingTime(remainingMs);
-        this.step = 'cooldown';
-      }
+    if (
+      this.data.listId &&
+      !this.storageService.canCheckAvailability(this.data.listId)
+    ) {
+      this.step = 'cooldown';
     }
   }
 
@@ -54,17 +49,13 @@ export class RevealPurchaseComponent {
       return;
     }
 
-    if (this.data.listId) {
-      const remainingMs =
-        this.storageService.getAvailabilityCheckCooldownRemainingMs(
-          this.data.listId,
-        );
-      if (remainingMs > 0) {
-        this.cooldownRemainingText = this.formatRemainingTime(remainingMs);
-        this.step = 'cooldown';
-        this.cdr.detectChanges();
-        return;
-      }
+    if (
+      this.data.listId &&
+      !this.storageService.canCheckAvailability(this.data.listId)
+    ) {
+      this.step = 'cooldown';
+      this.cdr.detectChanges();
+      return;
     }
 
     if (!this.data.listId) {
@@ -105,20 +96,5 @@ export class RevealPurchaseComponent {
 
   removeFromList(): void {
     this.dialogRef.close('remove');
-  }
-
-  private formatRemainingTime(remainingMs: number): string {
-    const totalMinutes = Math.max(1, Math.ceil(remainingMs / (60 * 1000)));
-    if (totalMinutes < 60) {
-      return `${totalMinutes} ${totalMinutes === 1 ? 'minute' : 'minutes'}`;
-    }
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    const hourText = `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
-    if (minutes === 0) {
-      return hourText;
-    }
-    const minuteText = `${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`;
-    return `${hourText} and ${minuteText}`;
   }
 }

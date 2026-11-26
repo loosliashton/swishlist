@@ -8,6 +8,7 @@ import { HomeComponent } from './home/home.component';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
@@ -70,6 +71,7 @@ const routes: Routes = [
     BrowserAnimationsModule,
     MatInputModule,
     MatButtonModule,
+    MatMenuModule,
     MatCheckboxModule,
     MatExpansionModule,
     MatSnackBarModule,

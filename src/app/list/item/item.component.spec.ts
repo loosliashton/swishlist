@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule } from '@angular/material/menu';
 import {
   MAT_DIALOG_DATA,
   MatDialog,
@@ -42,7 +43,12 @@ describe('ItemComponent', () => {
 
     TestBed.configureTestingModule({
       declarations: [ItemComponent],
-      imports: [NoopAnimationsModule, MatDialogModule, MatButtonModule],
+      imports: [
+        NoopAnimationsModule,
+        MatDialogModule,
+        MatButtonModule,
+        MatMenuModule,
+      ],
       providers: [
         { provide: MatDialogRef, useValue: dialogRefSpy },
         { provide: MAT_DIALOG_DATA, useValue: data },
@@ -60,19 +66,27 @@ describe('ItemComponent', () => {
     TestBed.resetTestingModule();
   });
 
-  it('should render subtle availability check button for owner on a gift list and open RevealPurchaseComponent on click', () => {
+  it('should render 3-dot menu button for owner on a gift list and open RevealPurchaseComponent from menu', () => {
     const { fixture, data } = createComponent({
       isOwner: true,
       isGeneralList: false,
     });
 
-    const revealBtn: HTMLButtonElement | null =
-      fixture.nativeElement.querySelector('.reveal-btn');
-    expect(revealBtn).toBeTruthy();
-    expect(revealBtn?.textContent).toContain('Buying this yourself?');
-    expect(revealBtn?.textContent).toContain('Check availability');
+    const moreBtn: HTMLButtonElement | null =
+      fixture.nativeElement.querySelector('.more-options-btn');
+    expect(moreBtn).toBeTruthy();
 
-    revealBtn!.click();
+    moreBtn!.click();
+    fixture.detectChanges();
+
+    const menuItem: HTMLButtonElement | null =
+      document.querySelector('.reveal-menu-item');
+    expect(menuItem).toBeTruthy();
+    expect(menuItem?.textContent).toContain(
+      'Check availability (buying myself)',
+    );
+
+    menuItem!.click();
 
     expect(dialogSpy.open).toHaveBeenCalledWith(RevealPurchaseComponent, {
       data: {
@@ -87,38 +101,36 @@ describe('ItemComponent', () => {
   });
 
   it('should emit removeItemEvent and close dialog when user chooses to remove item', () => {
-    const { fixture, component } = createComponent(
+    const { component } = createComponent(
       { isOwner: true, isGeneralList: false },
       'remove',
     );
     const removeSpy = jasmine.createSpy('removeItemEvent');
     component.removeItemEvent.subscribe(removeSpy);
 
-    const revealBtn: HTMLButtonElement | null =
-      fixture.nativeElement.querySelector('.reveal-btn');
-    revealBtn!.click();
+    component.openRevealPurchaseModal();
 
     expect(removeSpy).toHaveBeenCalledTimes(1);
     expect(dialogRefSpy.close).toHaveBeenCalledTimes(1);
   });
 
-  it('should not render availability check button for non-owners', () => {
+  it('should not render 3-dot menu button for non-owners', () => {
     const { fixture } = createComponent({
       isOwner: false,
       isGeneralList: false,
     });
 
-    const revealBtn = fixture.nativeElement.querySelector('.reveal-btn');
-    expect(revealBtn).toBeNull();
+    const moreBtn = fixture.nativeElement.querySelector('.more-options-btn');
+    expect(moreBtn).toBeNull();
   });
 
-  it('should not render availability check button on general lists', () => {
+  it('should not render 3-dot menu button on general lists', () => {
     const { fixture } = createComponent({
       isOwner: true,
       isGeneralList: true,
     });
 
-    const revealBtn = fixture.nativeElement.querySelector('.reveal-btn');
-    expect(revealBtn).toBeNull();
+    const moreBtn = fixture.nativeElement.querySelector('.more-options-btn');
+    expect(moreBtn).toBeNull();
   });
 });

@@ -63,27 +63,23 @@ describe('StorageService', () => {
 
   it('should allow availability check when no prior check exists', () => {
     expect(service.canCheckAvailability('list-1')).toBeTrue();
-    expect(service.getAvailabilityCheckCooldownRemainingMs('list-1')).toBe(0);
+    expect(service.getLastAvailabilityCheckDate('list-1')).toBeNull();
   });
 
-  it('should enforce 24-hour cooldown per list after recording a check', () => {
-    const start = 1_700_000_000_000;
-    service.recordAvailabilityCheck('list-1', start);
+  it('should enforce once-per-calendar-day lockout per list', () => {
+    const todayLate = new Date(2026, 10, 26, 23, 55, 0);
+    const sameDayLater = new Date(2026, 10, 26, 23, 59, 0);
+    const nextDayEarly = new Date(2026, 10, 27, 0, 5, 0);
 
-    const oneHourLater = start + 60 * 60 * 1000;
-    expect(service.canCheckAvailability('list-1', oneHourLater)).toBeFalse();
-    expect(
-      service.getAvailabilityCheckCooldownRemainingMs('list-1', oneHourLater),
-    ).toBe(23 * 60 * 60 * 1000);
+    service.recordAvailabilityCheck('list-1', todayLate);
+
+    expect(service.getLastAvailabilityCheckDate('list-1')).toBe('2026-11-26');
+    expect(service.canCheckAvailability('list-1', sameDayLater)).toBeFalse();
 
     // Independent per list
-    expect(service.canCheckAvailability('list-2', oneHourLater)).toBeTrue();
+    expect(service.canCheckAvailability('list-2', sameDayLater)).toBeTrue();
 
-    // Cooldown expires after 24 hours
-    const afterCooldown = start + 24 * 60 * 60 * 1000;
-    expect(service.canCheckAvailability('list-1', afterCooldown)).toBeTrue();
-    expect(
-      service.getAvailabilityCheckCooldownRemainingMs('list-1', afterCooldown),
-    ).toBe(0);
+    // Resets on the next calendar day even if less than 24 hours later
+    expect(service.canCheckAvailability('list-1', nextDayEarly)).toBeTrue();
   });
 });
