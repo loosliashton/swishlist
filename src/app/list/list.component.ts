@@ -96,7 +96,7 @@ export class ListComponent implements OnInit, OnDestroy {
         // Update the page name
         this.titleService.setTitle(`${this.creator?.name}'s List`);
 
-        this.storageService.addRecentList(id);
+        void this.firebase.addRecentList(id);
         await this.manageSpoilerSettings(id);
 
         this.loading = false;

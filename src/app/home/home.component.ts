@@ -10,11 +10,10 @@ import {
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Subscription } from 'rxjs';
+import { combineLatest, Subscription } from 'rxjs';
 import { List } from 'src/models/list';
 import { User } from 'src/models/user';
 import { FirebaseService } from 'src/services/firebase.service';
-import { StorageService } from 'src/services/storage.service';
 import { AddListComponent } from './add-list/add-list.component';
 import { ChangeNameComponent } from './change-name/change-name.component';
 import { GiftSwapComponent } from './gift-swap/gift-swap.component';
@@ -44,6 +43,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   signingIn: boolean = false;
   tabAnimating: boolean = false;
   private tabManuallySelected: boolean = false;
+  private hasLoadedUserState: boolean = false;
+  private recentListsLoadSeq: number = 0;
   private scrollAnimationTimeout: ReturnType<typeof setTimeout> | null = null;
   private readonly tabOrder: HomeTab[] = ['my', 'saved', 'recent'];
   private subscriptions: Subscription[] = [];
@@ -51,7 +52,6 @@ export class HomeComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private firebase: FirebaseService,
-    private storageService: StorageService,
     private snackbar: MatSnackBar,
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef,
@@ -74,7 +74,13 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.authReady = ready;
         this.cdr.detectChanges();
       }),
-      this.firebase.currentUser$.subscribe((user) => {
+      combineLatest([
+        this.firebase.authReady$,
+        this.firebase.currentUser$,
+      ]).subscribe(([ready, user]) => {
+        if (!ready) {
+          return;
+        }
         const prevUser = this.currentUser;
         const wasSignedOut = !prevUser;
         this.currentUser = user;
@@ -82,14 +88,33 @@ export class HomeComponent implements OnInit, OnDestroy {
           this.activeTab = 'my';
           this.tabProgress = 0;
         }
-        this.loadUserLists(user);
-        if (prevUser?.id !== user?.id) {
+        if (
+          !this.hasLoadedUserState ||
+          prevUser?.id !== user?.id ||
+          prevUser?.name !== user?.name ||
+          prevUser?.lists !== user?.lists ||
+          prevUser?.savedLists !== user?.savedLists
+        ) {
+          this.loadUserLists(user);
+        }
+        if (
+          !this.hasLoadedUserState ||
+          prevUser?.id !== user?.id ||
+          prevUser?.recentLists !== user?.recentLists
+        ) {
           this.loadRecentLists();
         }
+        this.hasLoadedUserState = true;
       }),
     );
 
-    await this.loadRecentLists();
+    if (this.firebase.currentUser) {
+      void this.firebase
+        .refreshCurrentUser()
+        .catch((error) =>
+          console.error('Error refreshing current user:', error),
+        );
+    }
   }
 
   ngOnDestroy() {
@@ -315,9 +340,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   private async loadRecentLists() {
+    const seq = ++this.recentListsLoadSeq;
     const ownedIds = new Set(this.currentUser?.lists ?? []);
-    const sortedIds = this.storageService
-      .getSortedRecentListIds()
+    const sortedIds = this.firebase
+      .getSortedRecentListIds(this.currentUser)
       .filter((id) => !ownedIds.has(id));
     if (!sortedIds.length) {
       this.recentListItems = [];
@@ -338,12 +364,23 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
 
     try {
-      this.recentListItems = await this.firebase.getListsWithCreators(topIds);
+      const items = await this.firebase.getListsWithCreators(topIds);
+      if (seq !== this.recentListsLoadSeq) {
+        return;
+      }
+      this.recentListItems = items;
+      const foundIds = new Set(items.map((item) => item.list.id));
+      const missingIds = topIds.filter((id) => !foundIds.has(id));
+      if (missingIds.length) {
+        void this.firebase.removeRecentLists(missingIds);
+      }
     } catch (error) {
       console.error('Error loading recent lists:', error);
     } finally {
-      this.loading = false;
-      this.cdr.detectChanges();
+      if (seq === this.recentListsLoadSeq) {
+        this.loading = false;
+        this.cdr.detectChanges();
+      }
     }
   }
 
@@ -401,7 +438,9 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (!this.currentUser) return;
     if (!confirm('Are you sure you want to delete this list?')) return;
     await this.firebase.deleteList(this.currentUser, list);
-    this.storageService.removeRecentList(list.id!);
+    if (list.id) {
+      await this.firebase.removeRecentList(list.id);
+    }
     this.recentListItems = this.recentListItems.filter(
       (item) => item.list.id !== list.id,
     );
@@ -441,6 +480,8 @@ export class HomeComponent implements OnInit, OnDestroy {
       (item) => item.list.id !== list.id,
     );
 
-    this.storageService.removeRecentList(list.id!);
+    if (list.id) {
+      void this.firebase.removeRecentList(list.id);
+    }
   }
 }

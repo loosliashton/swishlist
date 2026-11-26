@@ -14,6 +14,8 @@ import {
   deleteDoc,
   setDoc,
   documentId,
+  FieldPath,
+  deleteField,
 } from 'firebase/firestore';
 import {
   getAuth,
@@ -28,6 +30,7 @@ import { BehaviorSubject, filter, firstValueFrom } from 'rxjs';
 import { User } from '../models/user';
 import { List, ListType } from '../models/list';
 import { Item } from '../models/item';
+import { StorageService } from './storage.service';
 
 let db: ReturnType<typeof getFirestore>;
 try {
@@ -47,6 +50,7 @@ export class FirebaseService {
   private readonly USERS_COL = 'users';
   private readonly LISTS_COL = 'lists';
   private readonly SHORT_URLS_COL = 'shortUrls';
+  private readonly MAX_RECENT_LISTS = 30;
 
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   currentUser$ = this.currentUserSubject.asObservable();
@@ -57,8 +61,12 @@ export class FirebaseService {
   private authResolutionPromises: Map<string, Promise<User | null>> = new Map();
   private listCache = new Map<string, List>();
   private userCache = new Map<string, User>();
+  private pendingRecentListsWrite: Promise<void> = Promise.resolve();
 
-  constructor(private ngZone: NgZone) {
+  constructor(
+    private ngZone: NgZone,
+    private storageService: StorageService,
+  ) {
     onAuthStateChanged(auth, async (authUser) => {
       try {
         if (authUser) {
@@ -114,6 +122,7 @@ export class FirebaseService {
   }
 
   async refreshCurrentUser(): Promise<User | null> {
+    await this.pendingRecentListsWrite.catch(() => {});
     const current = this.currentUserSubject.value;
     if (!current?.id) return null;
     const fresh = await this.getUserById(current.id);
@@ -136,7 +145,10 @@ export class FirebaseService {
 
   cacheUser(user: User | null | undefined): void {
     if (user?.id) {
-      this.userCache.set(user.id, { ...user });
+      this.userCache.set(user.id, {
+        ...user,
+        ...(user.recentLists ? { recentLists: { ...user.recentLists } } : {}),
+      });
     }
   }
 
@@ -207,6 +219,7 @@ export class FirebaseService {
 
         if (user) {
           const updates: Partial<User> = {};
+          const isFirstAuthSignIn = !user.uid;
           if (user.uid !== authUser.uid) {
             updates.uid = authUser.uid;
           }
@@ -216,7 +229,10 @@ export class FirebaseService {
           }
           if (
             authUser.displayName &&
-            (!user.name || user.name.toLowerCase() === user.email.toLowerCase())
+            user.name !== authUser.displayName &&
+            (isFirstAuthSignIn ||
+              !user.name ||
+              user.name.toLowerCase() === user.email.toLowerCase())
           ) {
             updates.name = authUser.displayName;
           }
@@ -227,6 +243,7 @@ export class FirebaseService {
             user = { ...user, ...updates };
           }
           this.cacheUser(user);
+          user = await this.syncLocalRecentListsToAccount(user);
 
           if (user.lists?.length) {
             void this.backfillCreatorUidOnLists(user.lists, authUser.uid);
@@ -236,6 +253,9 @@ export class FirebaseService {
         }
 
         const email = (authUser.email || '').toLowerCase().trim();
+        const localRecent = this.storageService.getRecentLists();
+        const { pruned: initialRecentLists } =
+          this.pruneRecentLists(localRecent);
         const newUser: User = {
           uid: authUser.uid,
           email,
@@ -243,8 +263,12 @@ export class FirebaseService {
           name: authUser.displayName || email || 'User',
           lists: [],
           savedLists: [],
+          recentLists: initialRecentLists,
         };
         const docRef = await addDoc(collection(db, this.USERS_COL), newUser);
+        if (Object.keys(localRecent).length > 0) {
+          this.storageService.clearRecentLists();
+        }
         const createdUser = { ...newUser, id: docRef.id };
         this.cacheUser(createdUser);
         return createdUser;
@@ -409,11 +433,33 @@ export class FirebaseService {
   async deleteList(user: User, list: List) {
     const updatedLists = user.lists?.filter((id) => id !== list.id) ?? [];
     const userDocRef = doc(db, this.USERS_COL, user.id!);
-    await updateDoc(userDocRef, {
-      lists: updatedLists,
-    });
-    user.lists = updatedLists;
-    this.patchCurrentUser(user.id!, { lists: updatedLists });
+    if (list.id) {
+      this.storageService.removeRecentList(list.id);
+    }
+    const hasRecentEntry = !!(list.id && user.recentLists?.[list.id]);
+    if (hasRecentEntry && list.id) {
+      const updatedRecent = { ...user.recentLists };
+      delete updatedRecent[list.id];
+      await updateDoc(
+        userDocRef,
+        'lists',
+        updatedLists,
+        new FieldPath('recentLists', list.id),
+        deleteField(),
+      );
+      user.recentLists = updatedRecent;
+      user.lists = updatedLists;
+      this.patchCurrentUser(user.id!, {
+        lists: updatedLists,
+        recentLists: updatedRecent,
+      });
+    } else {
+      await updateDoc(userDocRef, {
+        lists: updatedLists,
+      });
+      user.lists = updatedLists;
+      this.patchCurrentUser(user.id!, { lists: updatedLists });
+    }
 
     // Delete references to this list in other users' savedLists arrays
     const usersCol = collection(db, this.USERS_COL);
@@ -556,6 +602,168 @@ export class FirebaseService {
     });
     user.savedLists = updatedSavedLists;
     this.patchCurrentUser(user.id!, { savedLists: updatedSavedLists });
+  }
+
+  pruneRecentLists(recentLists: { [id: string]: string }): {
+    pruned: { [id: string]: string };
+    droppedIds: string[];
+  } {
+    const sortedIds = this.storageService.sortRecentListIds(recentLists);
+    const keptIds = sortedIds.slice(0, this.MAX_RECENT_LISTS);
+    const droppedIds = sortedIds.slice(this.MAX_RECENT_LISTS);
+    const pruned: { [id: string]: string } = {};
+    for (const id of keptIds) {
+      pruned[id] = recentLists[id];
+    }
+    return { pruned, droppedIds };
+  }
+
+  mergeRecentLists(
+    accountRecent: { [id: string]: string } | undefined,
+    localRecent: { [id: string]: string } | undefined,
+  ): { merged: { [id: string]: string }; changed: boolean } {
+    const existing = accountRecent ?? {};
+    const combined: { [id: string]: string } = { ...existing };
+
+    for (const [id, localTs] of Object.entries(localRecent ?? {})) {
+      const localTime = new Date(localTs).getTime() || 0;
+      const existingTime =
+        id in combined ? new Date(combined[id]).getTime() || 0 : -1;
+      if (!(id in combined) || localTime > existingTime) {
+        combined[id] = localTs;
+      }
+    }
+
+    const { pruned: merged } = this.pruneRecentLists(combined);
+    const existingKeys = Object.keys(existing);
+    const mergedKeys = Object.keys(merged);
+    const changed =
+      existingKeys.length !== mergedKeys.length ||
+      mergedKeys.some((id) => existing[id] !== merged[id]);
+
+    return { merged, changed };
+  }
+
+  private enqueueRecentListsWrite(work: () => Promise<void>): Promise<void> {
+    const next = this.pendingRecentListsWrite.catch(() => {}).then(work);
+    this.pendingRecentListsWrite = next.catch(() => {});
+    return next;
+  }
+
+  private async syncLocalRecentListsToAccount(user: User): Promise<User> {
+    const localRecent = this.storageService.getRecentLists();
+    if (!user.id || Object.keys(localRecent).length === 0) {
+      return user;
+    }
+
+    const { merged, changed } = this.mergeRecentLists(
+      user.recentLists,
+      localRecent,
+    );
+
+    try {
+      if (changed) {
+        const userDocRef = doc(db, this.USERS_COL, user.id);
+        await updateDoc(userDocRef, { recentLists: merged });
+      }
+      this.storageService.clearRecentLists();
+      const updatedUser = changed ? { ...user, recentLists: merged } : user;
+      this.cacheUser(updatedUser);
+      return updatedUser;
+    } catch (error) {
+      console.error('Error syncing local recent lists to account:', error);
+      return user;
+    }
+  }
+
+  getSortedRecentListIds(user?: User | null): string[] {
+    const activeUser = user !== undefined ? user : this.currentUser;
+    if (!activeUser) {
+      return this.storageService.getSortedRecentListIds();
+    }
+    const localRecent = this.storageService.getRecentLists();
+    const source =
+      Object.keys(localRecent).length > 0
+        ? this.mergeRecentLists(activeUser.recentLists, localRecent).merged
+        : (activeUser.recentLists ?? {});
+    return this.storageService.sortRecentListIds(source);
+  }
+
+  async addRecentList(listId: string): Promise<void> {
+    if (!listId) return;
+    const user = this.currentUser;
+    if (!user?.id) {
+      this.storageService.addRecentList(listId);
+      return;
+    }
+
+    const timestamp = new Date().toISOString();
+    const nextMap = { ...(user.recentLists ?? {}), [listId]: timestamp };
+    const { pruned, droppedIds } = this.pruneRecentLists(nextMap);
+
+    this.patchCurrentUser(user.id, { recentLists: pruned });
+
+    await this.enqueueRecentListsWrite(async () => {
+      try {
+        const userDocRef = doc(db, this.USERS_COL, user.id!);
+        const extraArgs: unknown[] = [];
+        for (const droppedId of droppedIds) {
+          extraArgs.push(new FieldPath('recentLists', droppedId), deleteField());
+        }
+        await updateDoc(
+          userDocRef,
+          new FieldPath('recentLists', listId),
+          timestamp,
+          ...extraArgs,
+        );
+      } catch (error) {
+        console.error('Error saving recent list to account:', error);
+      }
+    });
+  }
+
+  async removeRecentList(listId: string): Promise<void> {
+    return this.removeRecentLists([listId]);
+  }
+
+  async removeRecentLists(listIds: string[]): Promise<void> {
+    const uniqueIds = [...new Set(listIds.filter(Boolean))];
+    if (!uniqueIds.length) return;
+
+    for (const id of uniqueIds) {
+      this.storageService.removeRecentList(id);
+    }
+
+    const user = this.currentUser;
+    if (!user?.id || !user.recentLists) return;
+
+    const idsToDelete = uniqueIds.filter((id) => id in user.recentLists!);
+    if (!idsToDelete.length) return;
+
+    const updated = { ...user.recentLists };
+    for (const id of idsToDelete) {
+      delete updated[id];
+    }
+    this.patchCurrentUser(user.id, { recentLists: updated });
+
+    await this.enqueueRecentListsWrite(async () => {
+      try {
+        const userDocRef = doc(db, this.USERS_COL, user.id!);
+        const [firstId, ...restIds] = idsToDelete;
+        const extraArgs: unknown[] = [];
+        for (const id of restIds) {
+          extraArgs.push(new FieldPath('recentLists', id), deleteField());
+        }
+        await updateDoc(
+          userDocRef,
+          new FieldPath('recentLists', firstId),
+          deleteField(),
+          ...extraArgs,
+        );
+      } catch (error) {
+        console.error('Error removing recent list(s) from account:', error);
+      }
+    });
   }
 
   async getList(listId: string): Promise<List | null> {
