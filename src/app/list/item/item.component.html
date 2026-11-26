@@ -14,14 +14,37 @@
       <span>{{ item.name }}</span>
     }
   </h2>
-  <button
-    type="button"
-    mat-dialog-close
-    class="close-icon-btn"
-    aria-label="Close"
-  >
-    <i class="fa-solid fa-xmark"></i>
-  </button>
+  <div class="header-actions">
+    @if (isOwner && !isGeneralList) {
+      <button
+        type="button"
+        class="header-icon-btn more-options-btn"
+        aria-label="More options"
+        [matMenuTriggerFor]="itemOptionsMenu"
+      >
+        <i class="fa-solid fa-ellipsis-vertical"></i>
+      </button>
+      <mat-menu #itemOptionsMenu="matMenu" xPosition="before">
+        <button
+          type="button"
+          mat-menu-item
+          class="reveal-menu-item"
+          (click)="openRevealPurchaseModal()"
+        >
+          <i class="fa-solid fa-bag-shopping menu-item-icon"></i>
+          <span>Check availability (buying myself)</span>
+        </button>
+      </mat-menu>
+    }
+    <button
+      type="button"
+      mat-dialog-close
+      class="header-icon-btn close-icon-btn"
+      aria-label="Close"
+    >
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
 </div>
 
 @if (item.details) {

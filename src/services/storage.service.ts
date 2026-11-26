@@ -6,6 +6,7 @@ import { Injectable } from '@angular/core';
 export class StorageService {
   private readonly RECENT_LISTS_KEY = 'recentLists';
   private readonly SPOILER_CHOICES_KEY = 'spoilerChoices';
+  private readonly AVAILABILITY_CHECKS_KEY = 'availabilityChecks';
 
   constructor() {}
 
@@ -85,5 +86,47 @@ export class StorageService {
   getSpoilerChoice(id: string): boolean | undefined {
     const choices = this.getSpoilerChoices();
     return choices[id];
+  }
+
+  private getLocalDateKey(date: Date = new Date()): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  getAvailabilityChecks(): { [listId: string]: string | number } {
+    try {
+      const parsed = JSON.parse(
+        localStorage.getItem(this.AVAILABILITY_CHECKS_KEY) || '{}',
+      );
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+        ? parsed
+        : {};
+    } catch {
+      return {};
+    }
+  }
+
+  getLastAvailabilityCheckDate(listId: string): string | null {
+    const checks = this.getAvailabilityChecks();
+    const value = checks[listId];
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      return value;
+    }
+    if (typeof value === 'number' && !isNaN(value)) {
+      return this.getLocalDateKey(new Date(value));
+    }
+    return null;
+  }
+
+  recordAvailabilityCheck(listId: string, date: Date = new Date()): void {
+    const checks = this.getAvailabilityChecks();
+    checks[listId] = this.getLocalDateKey(date);
+    localStorage.setItem(this.AVAILABILITY_CHECKS_KEY, JSON.stringify(checks));
+  }
+
+  canCheckAvailability(listId: string, now: Date = new Date()): boolean {
+    return this.getLastAvailabilityCheckDate(listId) !== this.getLocalDateKey(now);
   }
 }

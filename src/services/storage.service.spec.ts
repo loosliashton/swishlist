@@ -60,4 +60,26 @@ describe('StorageService', () => {
     expect(service.getRecentLists()).toEqual({});
     expect(service.getSpoilerChoices()).toEqual({});
   });
+
+  it('should allow availability check when no prior check exists', () => {
+    expect(service.canCheckAvailability('list-1')).toBeTrue();
+    expect(service.getLastAvailabilityCheckDate('list-1')).toBeNull();
+  });
+
+  it('should enforce once-per-calendar-day lockout per list', () => {
+    const todayLate = new Date(2026, 10, 26, 23, 55, 0);
+    const sameDayLater = new Date(2026, 10, 26, 23, 59, 0);
+    const nextDayEarly = new Date(2026, 10, 27, 0, 5, 0);
+
+    service.recordAvailabilityCheck('list-1', todayLate);
+
+    expect(service.getLastAvailabilityCheckDate('list-1')).toBe('2026-11-26');
+    expect(service.canCheckAvailability('list-1', sameDayLater)).toBeFalse();
+
+    // Independent per list
+    expect(service.canCheckAvailability('list-2', sameDayLater)).toBeTrue();
+
+    // Resets on the next calendar day even if less than 24 hours later
+    expect(service.canCheckAvailability('list-1', nextDayEarly)).toBeTrue();
+  });
 });

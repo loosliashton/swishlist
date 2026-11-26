@@ -8,6 +8,7 @@ import { HomeComponent } from './home/home.component';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
@@ -19,6 +20,7 @@ import { ListComponent } from './list/list.component';
 import { AddItemComponent } from './list/add-item/add-item.component';
 import { SpoilerPromptComponent } from './list/spoiler-prompt/spoiler-prompt.component';
 import { ItemComponent } from './list/item/item.component';
+import { RevealPurchaseComponent } from './list/item/reveal-purchase/reveal-purchase.component';
 import { ChangeNameComponent } from './home/change-name/change-name.component';
 import { SuggestionsComponent } from './list/suggestions/suggestions.component';
 import { ShareComponent } from './list/share/share.component';
@@ -52,6 +54,7 @@ const routes: Routes = [
     AddItemComponent,
     SpoilerPromptComponent,
     ItemComponent,
+    RevealPurchaseComponent,
     ChangeNameComponent,
     SuggestionsComponent,
     ShareComponent,
@@ -68,6 +71,7 @@ const routes: Routes = [
     BrowserAnimationsModule,
     MatInputModule,
     MatButtonModule,
+    MatMenuModule,
     MatCheckboxModule,
     MatExpansionModule,
     MatSnackBarModule,

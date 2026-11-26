@@ -288,21 +288,24 @@ export class ListComponent implements OnInit, OnDestroy {
     }
   }
 
-  openItemModal(item: Item) {
+  openItemModal(item: Item, itemIndex?: number) {
     const dialogRef = this.dialog.open(ItemComponent, {
       data: {
         item: item,
         listId: this.list!.id,
+        itemIndex: itemIndex,
         spoilers: this.spoilers,
         isGeneralList: !this.isGiftList,
         isOwner: this.isOwner,
       },
       width: '90vw',
       maxWidth: '500px',
+      autoFocus: 'dialog',
     });
 
     let copiedSub: Subscription | undefined;
     let editSub: Subscription | undefined;
+    let removeSub: Subscription | undefined;
     if (dialogRef.componentInstance) {
       copiedSub = dialogRef.componentInstance.copiedListEvent.subscribe(
         (listId: string) => {
@@ -314,11 +317,15 @@ export class ListComponent implements OnInit, OnDestroy {
       editSub = dialogRef.componentInstance.editItemEvent.subscribe(() => {
         this.editItem(item);
       });
+      removeSub = dialogRef.componentInstance.removeItemEvent.subscribe(() => {
+        this.removeItemWithoutConfirm(item, itemIndex);
+      });
     }
 
     dialogRef.afterClosed().subscribe((result) => {
       if (copiedSub) copiedSub.unsubscribe();
       if (editSub) editSub.unsubscribe();
+      if (removeSub) removeSub.unsubscribe();
       if (result) this.saveItemsOnly();
     });
   }
@@ -363,6 +370,34 @@ export class ListComponent implements OnInit, OnDestroy {
         this.list.items?.splice(index, 1);
         this.saveList();
       }
+    }
+  }
+
+  async removeItemWithoutConfirm(item: Item, itemIndex?: number) {
+    if (!this.isOwner || !this.list?.id) return;
+    const freshList = await this.firebase.getList(this.list.id);
+    if (freshList) {
+      this.list = freshList;
+    }
+    const items = this.list.items;
+    if (!items) return;
+
+    let targetIndex = -1;
+    if (typeof itemIndex === 'number' && items[itemIndex]?.name === item.name) {
+      targetIndex = itemIndex;
+    } else {
+      targetIndex = items.findIndex(
+        (i) =>
+          i.name === item.name &&
+          i.url === item.url &&
+          i.details === item.details,
+      );
+    }
+
+    if (targetIndex !== -1) {
+      items.splice(targetIndex, 1);
+      await this.saveList();
+      this.cdr.detectChanges();
     }
   }
 
