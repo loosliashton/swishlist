@@ -7,6 +7,15 @@
         rel="noopener noreferrer"
         class="item-link"
       >
+        @if (faviconUrl) {
+          <img
+            class="item-favicon"
+            [src]="faviconUrl"
+            alt=""
+            referrerpolicy="no-referrer"
+            (error)="onFaviconError()"
+          />
+        }
         {{ item.name }}
         <i class="fa-solid fa-arrow-up-right-from-square external-icon"></i>
       </a>

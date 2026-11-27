@@ -119,6 +119,14 @@
   color: #3f0099;
 }
 
+.item-favicon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border-radius: 3px;
+  object-fit: contain;
+}
+
 .item-name {
   font-size: 18px;
   font-weight: 500;
@@ -170,6 +178,10 @@
 .highlighted .item-name {
   color: #aaa;
   text-decoration: line-through;
+}
+
+.highlighted .item-favicon {
+  opacity: 0.45;
 }
 
 .buttons {
