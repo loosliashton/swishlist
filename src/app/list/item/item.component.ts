@@ -9,6 +9,7 @@ import { Item } from 'src/models/item';
 import { RecentListsModalComponent } from './recent-lists-modal/recent-lists-modal.component';
 import { RecentListsModalFunctionality } from './recent-lists-modal/recent-lists-modal-functionality.enum';
 import { RevealPurchaseComponent } from './reveal-purchase/reveal-purchase.component';
+import { getItemFaviconUrl } from 'src/utils/favicon';
 
 @Component({
   selector: 'app-item',
@@ -18,6 +19,7 @@ import { RevealPurchaseComponent } from './reveal-purchase/reveal-purchase.compo
 })
 export class ItemComponent {
   item: Item;
+  faviconUrl: string | null = null;
   listId: string | undefined;
   itemIndex: number | undefined;
   spoilers: boolean;
@@ -33,11 +35,16 @@ export class ItemComponent {
     public dialog: MatDialog,
   ) {
     this.item = data.item;
+    this.faviconUrl = getItemFaviconUrl(this.item);
     this.listId = data.listId;
     this.itemIndex = data.itemIndex;
     this.spoilers = !!data.spoilers;
     this.isGeneralList = !!data.isGeneralList;
     this.isOwner = !!data.isOwner;
+  }
+
+  onFaviconError() {
+    this.faviconUrl = null;
   }
 
   togglePurchase() {

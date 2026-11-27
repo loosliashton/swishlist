@@ -16,6 +16,7 @@ import { Subscription } from 'rxjs';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { RecentListsModalComponent } from './item/recent-lists-modal/recent-lists-modal.component';
 import { RecentListsModalFunctionality } from './item/recent-lists-modal/recent-lists-modal-functionality.enum';
+import { getItemFaviconUrl } from '../../utils/favicon';
 
 @Component({
   selector: 'app-list',
@@ -34,6 +35,7 @@ export class ListComponent implements OnInit, OnDestroy {
   savingBookmark: boolean = false;
   editing: boolean = false;
   userHasSavedSetting = false;
+  private failedFavicons = new Set<string>();
   private subscriptions: Subscription[] = [];
 
   constructor(
@@ -44,6 +46,18 @@ export class ListComponent implements OnInit, OnDestroy {
     private snackbar: MatSnackBar,
     private cdr: ChangeDetectorRef,
   ) {}
+
+  getItemFaviconUrl(item: Item): string | null {
+    const faviconUrl = getItemFaviconUrl(item);
+    if (!faviconUrl || this.failedFavicons.has(faviconUrl)) {
+      return null;
+    }
+    return faviconUrl;
+  }
+
+  onFaviconError(faviconUrl: string): void {
+    this.failedFavicons.add(faviconUrl);
+  }
 
   get isOwner(): boolean {
     return !!this.currentUser && this.currentUser.id === this.list?.creatorID;

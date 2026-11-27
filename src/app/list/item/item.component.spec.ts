@@ -133,4 +133,43 @@ describe('ItemComponent', () => {
     const moreBtn = fixture.nativeElement.querySelector('.more-options-btn');
     expect(moreBtn).toBeNull();
   });
+
+  it('should render item favicon when item has a valid URL and hide it on error', () => {
+    const { fixture } = createComponent({
+      item: {
+        name: 'Board Game',
+        url: 'https://a.co/d/example',
+        affiliateUrl:
+          'https://www.amazon.com/dp/B001/ref=nosim?tag=swishlist0c-20',
+        purchased: false,
+        details: '',
+      },
+    });
+
+    const favicon = fixture.nativeElement.querySelector(
+      'img.item-favicon',
+    ) as HTMLImageElement | null;
+    expect(favicon).toBeTruthy();
+    expect(favicon!.src).toBe(
+      'https://www.google.com/s2/favicons?domain=www.amazon.com&sz=64',
+    );
+
+    favicon!.dispatchEvent(new Event('error'));
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('img.item-favicon')).toBeNull();
+  });
+
+  it('should not render item favicon when item has no URL', () => {
+    const { fixture } = createComponent({
+      item: {
+        name: 'Board Game',
+        url: '',
+        purchased: false,
+        details: '',
+      },
+    });
+
+    expect(fixture.nativeElement.querySelector('img.item-favicon')).toBeNull();
+  });
 });

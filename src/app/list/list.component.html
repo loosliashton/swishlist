@@ -173,6 +173,16 @@
                     (change)="toggleItemCheck(item)"
                   ></mat-checkbox>
                 }
+                @if (getItemFaviconUrl(item); as faviconUrl) {
+                  <img
+                    class="item-favicon"
+                    [src]="faviconUrl"
+                    alt=""
+                    loading="lazy"
+                    referrerpolicy="no-referrer"
+                    (error)="onFaviconError(faviconUrl)"
+                  />
+                }
                 <div class="item-name">{{ item.name }}</div>
               </div>
 

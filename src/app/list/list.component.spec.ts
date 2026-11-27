@@ -263,4 +263,69 @@ describe('ListComponent', () => {
       );
     });
   });
+
+  describe('item favicons', () => {
+    it('should render a favicon for items with a valid URL and omit it for items without a URL', () => {
+      component.currentUser = ownerUser;
+      component.list = createList({
+        items: [
+          {
+            name: 'Coffee Mug',
+            url: 'https://www.target.com/p/mug',
+            purchased: false,
+            details: '',
+          },
+          {
+            name: 'Homemade Cake',
+            url: '',
+            purchased: false,
+            details: '',
+          },
+        ],
+      });
+      fixture.detectChanges();
+
+      const cards: NodeListOf<HTMLElement> =
+        fixture.nativeElement.querySelectorAll('.list-item-card');
+      expect(cards.length).toBe(2);
+
+      const firstFavicon = cards[0].querySelector(
+        'img.item-favicon',
+      ) as HTMLImageElement | null;
+      expect(firstFavicon).toBeTruthy();
+      expect(firstFavicon!.src).toBe(
+        'https://www.google.com/s2/favicons?domain=www.target.com&sz=64',
+      );
+
+      const secondFavicon = cards[1].querySelector('img.item-favicon');
+      expect(secondFavicon).toBeNull();
+    });
+
+    it('should hide the favicon if the image fails to load', () => {
+      component.currentUser = ownerUser;
+      component.list = createList({
+        items: [
+          {
+            name: 'Gadget',
+            url: 'https://example.com/gadget',
+            purchased: false,
+            details: '',
+          },
+        ],
+      });
+      fixture.detectChanges();
+
+      const favicon = fixture.nativeElement.querySelector(
+        'img.item-favicon',
+      ) as HTMLImageElement | null;
+      expect(favicon).toBeTruthy();
+
+      favicon!.dispatchEvent(new Event('error'));
+      fixture.detectChanges();
+
+      expect(
+        fixture.nativeElement.querySelector('img.item-favicon'),
+      ).toBeNull();
+    });
+  });
 });
