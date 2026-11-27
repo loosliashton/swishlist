@@ -26,6 +26,12 @@
     </div>
   </div>
 }
+@if (showLastModified) {
+  <p class="center last-modified-notice" [attr.title]="lastModifiedTooltip">
+    <i class="fa-regular fa-clock" aria-hidden="true"></i>
+    <span>{{ lastModifiedText }}</span>
+  </p>
+}
 @if (loading) {
   <div class="loading center pad-top">
     <div class="spinner center pad-top"></div>
