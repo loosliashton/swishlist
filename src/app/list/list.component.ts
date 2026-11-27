@@ -16,7 +16,6 @@ import { Subscription } from 'rxjs';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { RecentListsModalComponent } from './item/recent-lists-modal/recent-lists-modal.component';
 import { RecentListsModalFunctionality } from './item/recent-lists-modal/recent-lists-modal-functionality.enum';
-import { StorageService } from 'src/services/storage.service';
 
 @Component({
   selector: 'app-list',
@@ -43,7 +42,6 @@ export class ListComponent implements OnInit, OnDestroy {
     public dialog: MatDialog,
     private titleService: Title,
     private snackbar: MatSnackBar,
-    private storageService: StorageService,
     private cdr: ChangeDetectorRef,
   ) {}
 
@@ -126,6 +124,8 @@ export class ListComponent implements OnInit, OnDestroy {
         if (this.list && this.isOwner) {
           this.spoilers = false;
           this.userHasSavedSetting = false;
+        } else if (this.list?.id && this.isGiftList) {
+          this.userHasSavedSetting = this.checkIfUserHasSavedSpoilerSetting();
         }
         this.cdr.detectChanges();
       }),
@@ -209,8 +209,8 @@ export class ListComponent implements OnInit, OnDestroy {
     }
 
     // Check if user has set a spoiler preference for this list
-    if (this.storageService.hasSpoilerChoice(id)) {
-      this.spoilers = this.storageService.getSpoilerChoice(id)!;
+    if (this.firebase.hasSpoilerChoice(id)) {
+      this.spoilers = this.firebase.getSpoilerChoice(id)!;
     } else {
       // Check to see if the user wants spoilers
       this.spoilers = await this.openSpoilerPrompt();
@@ -510,11 +510,11 @@ export class ListComponent implements OnInit, OnDestroy {
   }
 
   checkIfUserHasSavedSpoilerSetting(): boolean {
-    return this.storageService.hasSpoilerChoice(this.list!.id!);
+    return this.firebase.hasSpoilerChoice(this.list!.id!);
   }
 
   async resetSpoilerPreference() {
-    this.storageService.removeSpoilerChoice(this.list!.id!);
+    await this.firebase.removeSpoilerChoice(this.list!.id!);
     await this.manageSpoilerSettings(this.list!.id!);
   }
 

@@ -7,4 +7,5 @@ export interface User {
   lists?: string[]; // IDs
   savedLists?: string[]; // IDs
   recentLists?: { [id: string]: string }; // listId -> ISO timestamp
+  spoilerChoices?: { [id: string]: boolean }; // listId -> show spoilers
 }

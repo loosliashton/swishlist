@@ -1,6 +1,6 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { StorageService } from 'src/services/storage.service';
+import { FirebaseService } from 'src/services/firebase.service';
 
 @Component({
   selector: 'app-spoiler-prompt',
@@ -17,7 +17,7 @@ export class SpoilerPromptComponent {
     @Inject(MAT_DIALOG_DATA)
     public data: { listId: string; isAuthenticatedNonOwner?: boolean },
     public dialogRef: MatDialogRef<SpoilerPromptComponent>,
-    private storageService: StorageService,
+    private firebase: FirebaseService,
   ) {
     this.listId = data.listId;
     this.isAuthenticatedNonOwner = !!data.isAuthenticatedNonOwner;
@@ -25,7 +25,7 @@ export class SpoilerPromptComponent {
 
   onSelect(spoilers: boolean) {
     if (this.rememberChoice) {
-      this.storageService.setSpoilerChoice(this.listId, spoilers);
+      void this.firebase.setSpoilerChoice(this.listId, spoilers);
     }
     this.dialogRef.close(spoilers);
   }

@@ -154,4 +154,109 @@ describe('FirebaseService', () => {
       expect(service.getSortedRecentListIds(null)).toEqual(['second', 'first']);
     });
   });
+
+  describe('mergeSpoilerChoices', () => {
+    it('should preserve account choices and fill in new local choices', () => {
+      const accountChoices = { 'list-a': true, 'list-b': false };
+      const localChoices = { 'list-a': false, 'list-c': true };
+
+      const { merged, changed } = service.mergeSpoilerChoices(
+        accountChoices,
+        localChoices,
+      );
+
+      expect(changed).toBeTrue();
+      expect(merged).toEqual({
+        'list-a': true,
+        'list-b': false,
+        'list-c': true,
+      });
+    });
+
+    it('should report changed=false when local choices add no new keys', () => {
+      const accountChoices = { 'list-a': true };
+      const localChoices = { 'list-a': false };
+
+      const { merged, changed } = service.mergeSpoilerChoices(
+        accountChoices,
+        localChoices,
+      );
+
+      expect(changed).toBeFalse();
+      expect(merged).toEqual({ 'list-a': true });
+    });
+  });
+
+  describe('spoilerChoices', () => {
+    it('should prefer account spoilerChoices over localStorage when signed in', () => {
+      localStorage.setItem(
+        'spoilerChoices',
+        JSON.stringify({ 'list-1': false, 'list-local': true }),
+      );
+      const user: User = {
+        id: 'u1',
+        name: 'Test User',
+        email: 'test@example.com',
+        spoilerChoices: { 'list-1': true },
+      };
+
+      expect(service.hasSpoilerChoice('list-1', user)).toBeTrue();
+      expect(service.getSpoilerChoice('list-1', user)).toBeTrue();
+      expect(service.getSpoilerChoice('list-local', user)).toBeTrue();
+      expect(service.hasSpoilerChoice('list-missing', user)).toBeFalse();
+    });
+
+    it('should fall back to localStorage when signed out', () => {
+      localStorage.setItem(
+        'spoilerChoices',
+        JSON.stringify({ 'list-1': false }),
+      );
+
+      expect(service.hasSpoilerChoice('list-1', null)).toBeTrue();
+      expect(service.getSpoilerChoice('list-1', null)).toBeFalse();
+      expect(service.hasSpoilerChoice('list-2', null)).toBeFalse();
+    });
+  });
+
+  describe('availabilityChecks', () => {
+    it('should allow availability check when no prior check exists', () => {
+      expect(service.canCheckAvailability('list-1')).toBeTrue();
+      expect(service.getLastAvailabilityCheckDate('list-1')).toBeNull();
+    });
+
+    it('should enforce once-per-calendar-day lockout per list using cached or provided list', () => {
+      const todayLate = new Date(2026, 10, 26, 23, 55, 0);
+      const sameDayLater = new Date(2026, 10, 26, 23, 59, 0);
+      const nextDayEarly = new Date(2026, 10, 27, 0, 5, 0);
+
+      service.cacheList({
+        id: 'list-1',
+        name: 'Birthday',
+        creatorID: 'u1',
+        lastAvailabilityCheckDate: service.getLocalDateKey(todayLate),
+      });
+
+      expect(service.getLastAvailabilityCheckDate('list-1')).toBe('2026-11-26');
+      expect(service.canCheckAvailability('list-1', sameDayLater)).toBeFalse();
+
+      // Independent per list
+      expect(service.canCheckAvailability('list-2', sameDayLater)).toBeTrue();
+
+      // Resets on the next calendar day even if less than 24 hours later
+      expect(service.canCheckAvailability('list-1', nextDayEarly)).toBeTrue();
+
+      // Works directly with a fresh List object
+      expect(
+        service.canCheckAvailability(
+          {
+            id: 'list-fresh',
+            name: 'Fresh',
+            creatorID: 'u1',
+            lastAvailabilityCheckDate: '2026-11-26',
+          },
+          sameDayLater,
+        ),
+      ).toBeFalse();
+    });
+  });
 });

@@ -8,7 +8,6 @@ import { BehaviorSubject, of } from 'rxjs';
 
 import { ListComponent } from './list.component';
 import { FirebaseService } from '../../services/firebase.service';
-import { StorageService } from '../../services/storage.service';
 import { List } from '../../models/list';
 import { User } from '../../models/user';
 
@@ -17,7 +16,6 @@ describe('ListComponent', () => {
   let fixture: ComponentFixture<ListComponent>;
   let currentUserSubject: BehaviorSubject<User | null>;
   let firebaseSpy: jasmine.SpyObj<FirebaseService>;
-  let storageSpy: jasmine.SpyObj<StorageService>;
   let dialogSpy: jasmine.SpyObj<MatDialog>;
   let snackbarSpy: jasmine.SpyObj<MatSnackBar>;
   let titleSpy: jasmine.SpyObj<Title>;
@@ -67,6 +65,9 @@ describe('ListComponent', () => {
         'saveList',
         'updateListItems',
         'getCachedListsFromIds',
+        'hasSpoilerChoice',
+        'getSpoilerChoice',
+        'removeSpoilerChoice',
       ],
       {
         currentUser$: currentUserSubject.asObservable(),
@@ -79,14 +80,9 @@ describe('ListComponent', () => {
     firebaseSpy.addRecentList.and.resolveTo();
     firebaseSpy.updateListItems.and.resolveTo(true);
     firebaseSpy.getCachedListsFromIds.and.returnValue(null);
-
-    storageSpy = jasmine.createSpyObj('StorageService', [
-      'hasSpoilerChoice',
-      'getSpoilerChoice',
-      'removeSpoilerChoice',
-    ]);
-    storageSpy.hasSpoilerChoice.and.returnValue(true);
-    storageSpy.getSpoilerChoice.and.returnValue(true);
+    firebaseSpy.hasSpoilerChoice.and.returnValue(true);
+    firebaseSpy.getSpoilerChoice.and.returnValue(true);
+    firebaseSpy.removeSpoilerChoice.and.resolveTo();
 
     dialogSpy = jasmine.createSpyObj('MatDialog', ['open']);
     snackbarSpy = jasmine.createSpyObj('MatSnackBar', ['open']);
@@ -100,7 +96,6 @@ describe('ListComponent', () => {
           useValue: { paramMap: of(convertToParamMap({})) },
         },
         { provide: FirebaseService, useValue: firebaseSpy },
-        { provide: StorageService, useValue: storageSpy },
         { provide: MatDialog, useValue: dialogSpy },
         { provide: MatSnackBar, useValue: snackbarSpy },
         { provide: Title, useValue: titleSpy },

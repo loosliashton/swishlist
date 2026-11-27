@@ -2,7 +2,6 @@ import { ChangeDetectorRef, Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Item } from 'src/models/item';
 import { FirebaseService } from 'src/services/firebase.service';
-import { StorageService } from 'src/services/storage.service';
 
 export interface RevealPurchaseDialogData {
   item: Item;
@@ -29,12 +28,11 @@ export class RevealPurchaseComponent {
       RevealPurchaseDialogResult
     >,
     private firebase: FirebaseService,
-    private storageService: StorageService,
     private cdr: ChangeDetectorRef,
   ) {
     if (
       this.data.listId &&
-      !this.storageService.canCheckAvailability(this.data.listId)
+      !this.firebase.canCheckAvailability(this.data.listId)
     ) {
       this.step = 'cooldown';
     }
@@ -51,7 +49,7 @@ export class RevealPurchaseComponent {
 
     if (
       this.data.listId &&
-      !this.storageService.canCheckAvailability(this.data.listId)
+      !this.firebase.canCheckAvailability(this.data.listId)
     ) {
       this.step = 'cooldown';
       this.cdr.detectChanges();
@@ -67,6 +65,11 @@ export class RevealPurchaseComponent {
     this.step = 'loading';
     try {
       const freshList = await this.firebase.getList(this.data.listId);
+      if (freshList && !this.firebase.canCheckAvailability(freshList)) {
+        this.step = 'cooldown';
+        return;
+      }
+
       let latestItem: Item | undefined;
       if (
         typeof this.data.itemIndex === 'number' &&
@@ -82,9 +85,9 @@ export class RevealPurchaseComponent {
         );
       }
 
+      await this.firebase.recordAvailabilityCheck(this.data.listId);
       this.purchased = !!(latestItem ?? this.data.item).purchased;
       this.data.item.purchased = this.purchased;
-      this.storageService.recordAvailabilityCheck(this.data.listId);
       this.step = 'revealed';
     } catch (error) {
       console.error('Error checking purchase status:', error);

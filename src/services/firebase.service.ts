@@ -62,6 +62,7 @@ export class FirebaseService {
   private listCache = new Map<string, List>();
   private userCache = new Map<string, User>();
   private pendingRecentListsWrite: Promise<void> = Promise.resolve();
+  private pendingSpoilerChoicesWrite: Promise<void> = Promise.resolve();
 
   constructor(
     private ngZone: NgZone,
@@ -122,7 +123,10 @@ export class FirebaseService {
   }
 
   async refreshCurrentUser(): Promise<User | null> {
-    await this.pendingRecentListsWrite.catch(() => {});
+    await Promise.all([
+      this.pendingRecentListsWrite.catch(() => {}),
+      this.pendingSpoilerChoicesWrite.catch(() => {}),
+    ]);
     const current = this.currentUserSubject.value;
     if (!current?.id) return null;
     const fresh = await this.getUserById(current.id);
@@ -148,6 +152,9 @@ export class FirebaseService {
       this.userCache.set(user.id, {
         ...user,
         ...(user.recentLists ? { recentLists: { ...user.recentLists } } : {}),
+        ...(user.spoilerChoices
+          ? { spoilerChoices: { ...user.spoilerChoices } }
+          : {}),
       });
     }
   }
@@ -244,6 +251,7 @@ export class FirebaseService {
           }
           this.cacheUser(user);
           user = await this.syncLocalRecentListsToAccount(user);
+          user = await this.syncLocalSpoilerChoicesToAccount(user);
 
           if (user.lists?.length) {
             void this.backfillCreatorUidOnLists(user.lists, authUser.uid);
@@ -256,6 +264,7 @@ export class FirebaseService {
         const localRecent = this.storageService.getRecentLists();
         const { pruned: initialRecentLists } =
           this.pruneRecentLists(localRecent);
+        const localSpoilerChoices = this.storageService.getSpoilerChoices();
         const newUser: User = {
           uid: authUser.uid,
           email,
@@ -264,10 +273,14 @@ export class FirebaseService {
           lists: [],
           savedLists: [],
           recentLists: initialRecentLists,
+          spoilerChoices: localSpoilerChoices,
         };
         const docRef = await addDoc(collection(db, this.USERS_COL), newUser);
         if (Object.keys(localRecent).length > 0) {
           this.storageService.clearRecentLists();
+        }
+        if (Object.keys(localSpoilerChoices).length > 0) {
+          this.storageService.clearSpoilerChoices();
         }
         const createdUser = { ...newUser, id: docRef.id };
         this.cacheUser(createdUser);
@@ -404,6 +417,14 @@ export class FirebaseService {
         list.creatorID === this.currentUser.id
       ) {
         list.creatorUid = this.currentUser.uid;
+      }
+      const cached = list.id ? this.listCache.get(list.id) : undefined;
+      if (
+        cached?.lastAvailabilityCheckDate &&
+        (!list.lastAvailabilityCheckDate ||
+          cached.lastAvailabilityCheckDate > list.lastAvailabilityCheckDate)
+      ) {
+        list.lastAvailabilityCheckDate = cached.lastAvailabilityCheckDate;
       }
       const listDocRef = doc(db, this.LISTS_COL, list.id!);
       const lastModified = new Date().toISOString();
@@ -779,6 +800,170 @@ export class FirebaseService {
         console.error('Error removing recent list(s) from account:', error);
       }
     });
+  }
+
+  mergeSpoilerChoices(
+    accountChoices: { [id: string]: boolean } | undefined,
+    localChoices: { [id: string]: boolean } | undefined,
+  ): { merged: { [id: string]: boolean }; changed: boolean } {
+    const existing = accountChoices ?? {};
+    const merged: { [id: string]: boolean } = { ...existing };
+    let changed = false;
+
+    for (const [id, choice] of Object.entries(localChoices ?? {})) {
+      if (typeof choice === 'boolean' && !(id in merged)) {
+        merged[id] = choice;
+        changed = true;
+      }
+    }
+
+    return { merged, changed };
+  }
+
+  private enqueueSpoilerChoicesWrite(
+    work: () => Promise<void>,
+  ): Promise<void> {
+    const next = this.pendingSpoilerChoicesWrite.catch(() => {}).then(work);
+    this.pendingSpoilerChoicesWrite = next.catch(() => {});
+    return next;
+  }
+
+  private async syncLocalSpoilerChoicesToAccount(user: User): Promise<User> {
+    const localChoices = this.storageService.getSpoilerChoices();
+    if (!user.id || Object.keys(localChoices).length === 0) {
+      return user;
+    }
+
+    const { merged, changed } = this.mergeSpoilerChoices(
+      user.spoilerChoices,
+      localChoices,
+    );
+
+    try {
+      if (changed) {
+        const userDocRef = doc(db, this.USERS_COL, user.id);
+        await updateDoc(userDocRef, { spoilerChoices: merged });
+      }
+      this.storageService.clearSpoilerChoices();
+      const updatedUser = changed ? { ...user, spoilerChoices: merged } : user;
+      this.cacheUser(updatedUser);
+      return updatedUser;
+    } catch (error) {
+      console.error('Error syncing local spoiler choices to account:', error);
+      return user;
+    }
+  }
+
+  getSpoilerChoice(listId: string, user?: User | null): boolean | undefined {
+    if (!listId) return undefined;
+    const activeUser = user !== undefined ? user : this.currentUser;
+    if (!activeUser) {
+      return this.storageService.getSpoilerChoice(listId);
+    }
+    if (
+      activeUser.spoilerChoices &&
+      typeof activeUser.spoilerChoices[listId] === 'boolean'
+    ) {
+      return activeUser.spoilerChoices[listId];
+    }
+    return this.storageService.getSpoilerChoice(listId);
+  }
+
+  hasSpoilerChoice(listId: string, user?: User | null): boolean {
+    return this.getSpoilerChoice(listId, user) !== undefined;
+  }
+
+  async setSpoilerChoice(listId: string, choice: boolean): Promise<void> {
+    if (!listId) return;
+    const user = this.currentUser;
+    if (!user?.id) {
+      this.storageService.setSpoilerChoice(listId, choice);
+      return;
+    }
+
+    const updated = { ...(user.spoilerChoices ?? {}), [listId]: choice };
+    this.patchCurrentUser(user.id, { spoilerChoices: updated });
+
+    await this.enqueueSpoilerChoicesWrite(async () => {
+      try {
+        const userDocRef = doc(db, this.USERS_COL, user.id!);
+        await updateDoc(
+          userDocRef,
+          new FieldPath('spoilerChoices', listId),
+          choice,
+        );
+      } catch (error) {
+        console.error('Error saving spoiler choice to account:', error);
+      }
+    });
+  }
+
+  async removeSpoilerChoice(listId: string): Promise<void> {
+    if (!listId) return;
+    this.storageService.removeSpoilerChoice(listId);
+
+    const user = this.currentUser;
+    if (!user?.id || !user.spoilerChoices || !(listId in user.spoilerChoices)) {
+      return;
+    }
+
+    const updated = { ...user.spoilerChoices };
+    delete updated[listId];
+    this.patchCurrentUser(user.id, { spoilerChoices: updated });
+
+    await this.enqueueSpoilerChoicesWrite(async () => {
+      try {
+        const userDocRef = doc(db, this.USERS_COL, user.id!);
+        await updateDoc(
+          userDocRef,
+          new FieldPath('spoilerChoices', listId),
+          deleteField(),
+        );
+      } catch (error) {
+        console.error('Error removing spoiler choice from account:', error);
+      }
+    });
+  }
+
+  getLocalDateKey(date: Date = new Date()): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  getLastAvailabilityCheckDate(
+    listOrId: string | List | null | undefined,
+  ): string | null {
+    const list =
+      typeof listOrId === 'string' ? this.listCache.get(listOrId) : listOrId;
+    const value = list?.lastAvailabilityCheckDate;
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      return value;
+    }
+    return null;
+  }
+
+  canCheckAvailability(
+    listOrId: string | List | null | undefined,
+    now: Date = new Date(),
+  ): boolean {
+    return (
+      this.getLastAvailabilityCheckDate(listOrId) !== this.getLocalDateKey(now)
+    );
+  }
+
+  async recordAvailabilityCheck(
+    listId: string,
+    date: Date = new Date(),
+  ): Promise<void> {
+    const dateKey = this.getLocalDateKey(date);
+    const listDocRef = doc(db, this.LISTS_COL, listId);
+    await updateDoc(listDocRef, { lastAvailabilityCheckDate: dateKey });
+    const cached = this.listCache.get(listId);
+    if (cached) {
+      this.cacheList({ ...cached, lastAvailabilityCheckDate: dateKey });
+    }
   }
 
   async getList(listId: string): Promise<List | null> {

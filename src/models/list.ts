@@ -12,4 +12,5 @@ export interface List {
   shortUrl?: string;
   ideas?: string;
   lastModified?: string;
+  lastAvailabilityCheckDate?: string; // YYYY-MM-DD in owner's local calendar date
 }

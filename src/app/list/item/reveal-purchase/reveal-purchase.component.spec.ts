@@ -8,7 +8,6 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { Item } from 'src/models/item';
 import { FirebaseService } from 'src/services/firebase.service';
-import { StorageService } from 'src/services/storage.service';
 
 import {
   RevealPurchaseComponent,
@@ -19,17 +18,17 @@ describe('RevealPurchaseComponent', () => {
   let component: RevealPurchaseComponent;
   let fixture: ComponentFixture<RevealPurchaseComponent>;
   let firebaseSpy: jasmine.SpyObj<FirebaseService>;
-  let storageSpy: jasmine.SpyObj<StorageService>;
   let dialogRefSpy: jasmine.SpyObj<MatDialogRef<RevealPurchaseComponent>>;
   let dialogData: RevealPurchaseDialogData;
 
   async function setup(canCheckToday = true) {
-    firebaseSpy = jasmine.createSpyObj('FirebaseService', ['getList']);
-    storageSpy = jasmine.createSpyObj('StorageService', [
+    firebaseSpy = jasmine.createSpyObj('FirebaseService', [
+      'getList',
       'canCheckAvailability',
       'recordAvailabilityCheck',
     ]);
-    storageSpy.canCheckAvailability.and.returnValue(canCheckToday);
+    firebaseSpy.canCheckAvailability.and.returnValue(canCheckToday);
+    firebaseSpy.recordAvailabilityCheck.and.resolveTo();
     dialogRefSpy = jasmine.createSpyObj('MatDialogRef', ['close']);
     dialogData = {
       item: {
@@ -49,7 +48,6 @@ describe('RevealPurchaseComponent', () => {
         { provide: MatDialogRef, useValue: dialogRefSpy },
         { provide: MAT_DIALOG_DATA, useValue: dialogData },
         { provide: FirebaseService, useValue: firebaseSpy },
-        { provide: StorageService, useValue: storageSpy },
       ],
     }).compileComponents();
 
@@ -95,7 +93,7 @@ describe('RevealPurchaseComponent', () => {
     fixture.detectChanges();
 
     expect(firebaseSpy.getList).toHaveBeenCalledWith('list-1');
-    expect(storageSpy.recordAvailabilityCheck).toHaveBeenCalledWith('list-1');
+    expect(firebaseSpy.recordAvailabilityCheck).toHaveBeenCalledWith('list-1');
     expect(component.step).toBe('revealed');
     expect(component.purchased).toBeTrue();
     expect(dialogData.item.purchased).toBeTrue();
@@ -103,6 +101,26 @@ describe('RevealPurchaseComponent', () => {
     expect(text).toContain('Hold Off on This One');
     expect(text).toContain('skip buying it yourself');
     expect(fixture.nativeElement.querySelector('.remove-item-btn')).toBeNull();
+  });
+
+  it('should enter cooldown without revealing if fresh list was already checked today on another device', async () => {
+    await setup(true);
+    const freshList = {
+      id: 'list-1',
+      name: 'Birthday',
+      creatorID: 'user-1',
+      items: [{ ...dialogData.item, purchased: true }],
+      lastAvailabilityCheckDate: '2026-11-27',
+    };
+    firebaseSpy.getList.and.resolveTo(freshList);
+    firebaseSpy.canCheckAvailability.and.callFake((arg) => typeof arg === 'string');
+
+    await component.confirmReveal();
+    fixture.detectChanges();
+
+    expect(component.step).toBe('cooldown');
+    expect(firebaseSpy.recordAvailabilityCheck).not.toHaveBeenCalled();
+    expect(dialogData.item.purchased).toBeFalse();
   });
 
   it('should prompt user to remove item from list when not purchased', async () => {
@@ -117,7 +135,7 @@ describe('RevealPurchaseComponent', () => {
     await component.confirmReveal();
     fixture.detectChanges();
 
-    expect(storageSpy.recordAvailabilityCheck).toHaveBeenCalledWith('list-1');
+    expect(firebaseSpy.recordAvailabilityCheck).toHaveBeenCalledWith('list-1');
     expect(component.step).toBe('revealed');
     expect(component.purchased).toBeFalse();
     const text = fixture.nativeElement.textContent;
@@ -140,7 +158,7 @@ describe('RevealPurchaseComponent', () => {
     fixture.detectChanges();
 
     expect(component.step).toBe('error');
-    expect(storageSpy.recordAvailabilityCheck).not.toHaveBeenCalled();
+    expect(firebaseSpy.recordAvailabilityCheck).not.toHaveBeenCalled();
     expect(fixture.nativeElement.textContent).toContain(
       "Couldn't Check Availability",
     );
@@ -157,6 +175,6 @@ describe('RevealPurchaseComponent', () => {
 
     expect(component.step).toBe('revealed');
     expect(component.purchased).toBeTrue();
-    expect(storageSpy.recordAvailabilityCheck).toHaveBeenCalledWith('list-1');
+    expect(firebaseSpy.recordAvailabilityCheck).toHaveBeenCalledWith('list-1');
   });
 });
