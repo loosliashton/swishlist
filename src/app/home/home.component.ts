@@ -12,11 +12,14 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { combineLatest, Subscription } from 'rxjs';
 import { List } from 'src/models/list';
+import { Item } from 'src/models/item';
 import { User } from 'src/models/user';
 import { FirebaseService } from 'src/services/firebase.service';
 import { AddListComponent } from './add-list/add-list.component';
 import { ChangeNameComponent } from './change-name/change-name.component';
 import { GiftSwapComponent } from './gift-swap/gift-swap.component';
+import { RecentListsModalComponent } from '../list/item/recent-lists-modal/recent-lists-modal.component';
+import { RecentListsModalFunctionality } from '../list/item/recent-lists-modal/recent-lists-modal-functionality.enum';
 
 type HomeTab = 'my' | 'saved' | 'recent';
 
@@ -114,6 +117,19 @@ export class HomeComponent implements OnInit, OnDestroy {
         .catch((error) =>
           console.error('Error refreshing current user:', error),
         );
+    }
+
+    const sharedItem: Item | undefined = history.state?.sharedItem;
+    if (sharedItem) {
+      const { sharedItem: _sharedItem, ...restState } = history.state || {};
+      history.replaceState(restState, '');
+      this.dialog.open(RecentListsModalComponent, {
+        data: {
+          item: sharedItem,
+          functionality: RecentListsModalFunctionality.AddItemToList,
+        },
+        width: '600px',
+      });
     }
   }
 

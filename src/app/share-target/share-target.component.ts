@@ -1,9 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
-import { RecentListsModalComponent } from '../list/item/recent-lists-modal/recent-lists-modal.component';
 import { Item } from 'src/models/item';
-import { RecentListsModalFunctionality } from '../list/item/recent-lists-modal/recent-lists-modal-functionality.enum';
 
 @Component({
   selector: 'app-share-target',
@@ -12,64 +9,62 @@ import { RecentListsModalFunctionality } from '../list/item/recent-lists-modal/r
   standalone: false,
 })
 export class ShareTargetComponent implements OnInit {
-  private receivedTitle: string | null = null;
-  private receivedText: string | null = null;
-  private receivedUrl: string | null = null;
-
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    public dialog: MatDialog,
   ) {}
 
   ngOnInit(): void {
-    this.route.queryParamMap.subscribe((params) => {
-      this.receivedTitle = params.get('title');
-      this.receivedText = params.get('text');
-      this.receivedUrl = params.get('url');
-    });
+    if (this.isStaleNavigation()) {
+      this.router.navigate(['/'], { replaceUrl: true });
+      return;
+    }
 
-    this.processSharedData();
-  }
+    const params = this.route.snapshot.queryParamMap;
+    const receivedTitle = params.get('title');
+    const receivedText = params.get('text');
+    let receivedUrl = params.get('url');
 
-  private processSharedData() {
     // Validate data
-    if (!this.receivedTitle && !this.receivedText && !this.receivedUrl) {
+    if (!receivedTitle && !receivedText && !receivedUrl) {
       // If no valid data is received, navigate back to home
-      this.router.navigate(['/']);
+      this.router.navigate(['/'], { replaceUrl: true });
+      return;
     }
 
     // Extract URL from text if URL param is missing
-    if (!this.receivedUrl && this.receivedText) {
+    if (!receivedUrl && receivedText) {
       const urlRegex = /(https?:\/\/[^\s]+)/g;
-      const urls: string[] | null = this.receivedText.match(urlRegex);
+      const urls: string[] | null = receivedText.match(urlRegex);
       if (urls && urls.length > 0) {
-        this.receivedUrl = urls[0];
+        receivedUrl = urls[0];
       }
     }
 
     // Create an item with the data
     const item: Item = {
-      name: this.receivedTitle || '',
+      name: receivedTitle || '',
       details: '',
-      url: this.receivedUrl || '',
+      url: receivedUrl || '',
       purchased: false,
     };
 
-    // Open modal to add item to list
-    this.openAddToListModal(item);
+    // Immediately replace /share-target in history with / so reopening or
+    // navigating back never re-triggers the share-target flow.
+    this.router.navigate(['/'], {
+      replaceUrl: true,
+      state: { sharedItem: item },
+    });
   }
 
-  private openAddToListModal(item: Item) {
-    const dialogRef = this.dialog.open(RecentListsModalComponent, {
-      data: { item, functionality:  RecentListsModalFunctionality.AddItemToList },
-      width: '600px',
-    });
+  protected getNavigationType(): NavigationTimingType | undefined {
+    const entries = performance?.getEntriesByType?.('navigation');
+    const navEntry = entries?.[0] as PerformanceNavigationTiming | undefined;
+    return navEntry?.type;
+  }
 
-    dialogRef.afterClosed().subscribe((result) => {
-      if (!result) {
-        this.router.navigate(['/']);
-      }
-    });
+  private isStaleNavigation(): boolean {
+    const navType = this.getNavigationType();
+    return navType === 'reload' || navType === 'back_forward';
   }
 }
